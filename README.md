@@ -111,3 +111,6 @@ yarn preview  # 本機預覽 build 出來的 dist/
 * **子情境選單**: 目前「就地避難」／「大規模疏散」各自固定用一個子情境代表（`evac_ratio10`／`pt10`）；`sim_data` 裡其實還有 `20`/`40` 兩級規模的資料，之後如果要讓使用者選，`SCENARIO_CONFIG` 要從單一物件擴充成清單。
 * **道路服務水準圖層**: `sim_data/.../05_moi_sim/road_service_<情境>.geojson`（V/C 比、LOS 分級）還沒接上，需要新的 PathLayer（README 內部原本預留了 `VCPathLayer` 這個名字），目前只有 `pt20` 情境有這份資料。
 * **`01_trajectory` 逐運具拆檔**: 目前 trips/OD 都是走 `05_moi_sim` 的相容格式（單檔含全部運具），`01_trajectory`（每運具獨立、欄位更豐富，例如 `dist_road_m`/`is_teleport_walk`）還沒用上。
+
+## Dev Notes
+- Forked for MOI ABM redesign — testing SQLRooms integration for trajectory / profile / schedule views
