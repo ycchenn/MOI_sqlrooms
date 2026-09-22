@@ -126,3 +126,4 @@ yarn preview  # 本機預覽 build 出來的 dist/
 
 ## Dev Notes
 - Forked for MOI ABM redesign — testing SQLRooms integration for trajectory / profile / schedule views
+- 修改目標：time bar, schedule, dashboard
