@@ -3,3 +3,6 @@ node_modules
 
 *docs/
 *sim_data/
+
+# 實驗室內部測試資料（mentor 提供的 archive.zip 解壓內容），純本地使用，絕不進版控
+local_archive/

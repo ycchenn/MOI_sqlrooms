@@ -12,13 +12,13 @@ export const MAP_MIN_ZOOM = 10;
 export const MAP_MAX_ZOOM = 15;
 
 // 索引＝bit 的 log2（0=1, 1=2, 2=4, 3=8, 4=16），跟實際資料的 mode 編碼對齊
-// （見 sim_data README：1=walk 2=car 8=bus 16=metro，4 從未出現）。
-// index 2（bit=4）目前沒有對應運具——bicycle 已從 UI／篩選中移除，但這個位置保留，
-// 避免 BUS(8)/RAIL(16) 的 log2 index 錯位。
+// （sim_data README：1=walk 2=car 8=bus 16=metro，4 從未出現；
+// 但 local_archive 的 data.parquet 裡 modes 欄位實際會出現 4，語意未知，
+// 暫時歸類成 OTHER／「其他」，用這個位置本來就保留的顏色，等確認實際運具類型後再改標籤）。
 export const AGENT_MODE_TRIP_COLORS = [
   [ 28, 197, 248, 150], // WALK      // 淡藍
   [230,  41,  41, 150], // CAR       // 紅
-  [217, 138, 241, 150], // (unused，bit=4 保留位)
+  [217, 138, 241, 150], // OTHER     // 紫（bit=4，語意待確認）
   [239, 201,  74, 150], // BUS       // 橘黃
   [114, 225,  84, 150]  // RAIL      // 綠
 ]
@@ -33,6 +33,7 @@ export const AGENT_MODE_TRIP_LENGTH = [
 export enum MOBILITY_MODES {
   WALK = "walk",
   CAR = "car",
+  OTHER = "other",
   BUS = "bus",
   RAIL = "rail"
 }
@@ -40,26 +41,28 @@ export enum MOBILITY_MODES {
 export const ORDERED_MOBILITY_MODES = [
   MOBILITY_MODES.WALK,
   MOBILITY_MODES.CAR,
+  MOBILITY_MODES.OTHER,
   MOBILITY_MODES.BUS,
   MOBILITY_MODES.RAIL
 ]
 
-// 固定 bit 值，不要用陣列 index 位移推算——bicycle 拿掉後 ORDERED_MOBILITY_MODES 只剩 4 項，
-// 1<<index 會讓 BUS/RAIL 對不上實際資料的 8/16 bit。
+// 固定 bit 值，不要用陣列 index 位移推算——1<<index 會讓 BUS/RAIL 對不上實際資料的 8/16 bit。
 export const MOBILITY_MODE_BITS: Record<MOBILITY_MODES, number> = {
   [MOBILITY_MODES.WALK]: 1,
   [MOBILITY_MODES.CAR]: 2,
+  [MOBILITY_MODES.OTHER]: 4,
   [MOBILITY_MODES.BUS]: 8,
   [MOBILITY_MODES.RAIL]: 16,
 }
 
-export const INITIAL_SELETED_MOBILITY_MODES = [MOBILITY_MODES.WALK, MOBILITY_MODES.CAR, MOBILITY_MODES.BUS, MOBILITY_MODES.RAIL]
-export const INITIAL_SELETED_MOBILITY_MODES_BITS = [1,2,8,16]
+export const INITIAL_SELETED_MOBILITY_MODES = [MOBILITY_MODES.WALK, MOBILITY_MODES.CAR, MOBILITY_MODES.OTHER, MOBILITY_MODES.BUS, MOBILITY_MODES.RAIL]
+export const INITIAL_SELETED_MOBILITY_MODES_BITS = [1,2,4,8,16]
 
 // bit 值 → 中文標籤，給 Points 圖層的 tooltip 用（哪個路徑、什麼運具）
 export const MODE_BIT_LABELS: Record<number, string> = {
   [MOBILITY_MODE_BITS[MOBILITY_MODES.WALK]]: '走路',
   [MOBILITY_MODE_BITS[MOBILITY_MODES.CAR]]: '開車',
+  [MOBILITY_MODE_BITS[MOBILITY_MODES.OTHER]]: '其他',
   [MOBILITY_MODE_BITS[MOBILITY_MODES.BUS]]: '公車',
   [MOBILITY_MODE_BITS[MOBILITY_MODES.RAIL]]: '捷運',
 }

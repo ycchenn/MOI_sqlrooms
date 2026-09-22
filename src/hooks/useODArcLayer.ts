@@ -3,7 +3,7 @@ import { useSql } from '@sqlrooms/duckdb';
 import { useShallow } from '@sqlrooms/room-shell';
 import { useMapStore } from '@/zustand/useMapStore';
 import { LAYER_IDS } from '@/constants/layers';
-import { SCENARIO_CONFIG } from '@/constants/data';
+import { SCENARIO_CONFIG, USE_ARCHIVE_DATA } from '@/constants/data';
 import { ArrowODArcLayer } from '@/components/custom_layer/arrowODArcLayer/ArrowODArcLayer';
 
 export const useODArcLayer = () => {
@@ -17,7 +17,8 @@ export const useODArcLayer = () => {
   );
 
   const odDataUrl = SCENARIO_CONFIG[scenarioType].odDataUrl;
-  const query = `SELECT * FROM read_parquet('${odDataUrl}')`;
+  // local_archive 沒有對應的 OD parquet，暫時查一個保證 0 列、不碰網路的 SQL
+  const query = USE_ARCHIVE_DATA ? `SELECT NULL WHERE FALSE` : `SELECT * FROM read_parquet('${odDataUrl}')`;
 
   const { data: queryResult } = useSql<Record<string, unknown>>({ query });
   const arrowTable = queryResult?.arrowTable;

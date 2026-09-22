@@ -11,6 +11,13 @@ export const BUS_STOPS_URL = urlFor('02_points/bus_stops.csv');
 export const METRO_STATIONS_URL = urlFor('02_points/metro_stations.csv');
 export const SHELTERS_URL = urlFor('02_points/shelters.csv');
 
+// ⚠ 實驗性開關：暫時指向 local_archive/（mentor 提供的 archive.zip，純本地、已 gitignore）
+// 而不是走 SCENARIO_CONFIG 的正式 sim_data 情境資料。之後要接回 sim_data 時把這個改回 false，
+// 或等前端重新設計定案後把整套 SCENARIO_CONFIG 換掉即可，MainView/TimeLine/各 hook 裡的
+// USE_ARCHIVE_DATA 分支到時候一起刪掉。
+export const USE_ARCHIVE_DATA = true;
+export const ARCHIVE_DATA_URL = urlFor('data.parquet');
+
 export type ScenarioType = 'shelter_in_place' | 'mass_evacuation';
 
 export type ScenarioFileSet = {

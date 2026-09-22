@@ -7,7 +7,7 @@ import Supercluster from 'supercluster';
 import { useMapStore } from '@/zustand/useMapStore';
 import { LAYER_IDS } from '@/constants/layers';
 import { AGENT_MODE_TRIP_COLORS, MAP_MAX_ZOOM } from '@/constants/map';
-import { SCENARIO_CONFIG, BUS_STOPS_URL, METRO_STATIONS_URL } from '@/constants/data';
+import { SCENARIO_CONFIG, BUS_STOPS_URL, METRO_STATIONS_URL, USE_ARCHIVE_DATA } from '@/constants/data';
 
 const SCATTER_LAYER_ID = 'stop-counts-layer';
 const TEXT_LAYER_ID = 'stop-counts-labels';
@@ -78,7 +78,8 @@ export const useStopCountsLayer = (currentZoom: number) => {
     }))
   );
 
-  const query = buildQuery(SCENARIO_CONFIG[scenarioType].stopCountsUrl);
+  // local_archive 沒有 03_stop_counts 資料，強制走 buildQuery 既有的「null → 0 列」分支
+  const query = buildQuery(USE_ARCHIVE_DATA ? null : SCENARIO_CONFIG[scenarioType].stopCountsUrl);
   const { data } = useSql<Record<string, unknown>>({ query });
   const arrowTable = data?.arrowTable;
 

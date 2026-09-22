@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useMapStore } from "@/zustand/useMapStore";
 import { useSql } from "@sqlrooms/duckdb";
 import { useShallow } from "@sqlrooms/room-shell";
-import { SCENARIO_CONFIG } from "@/constants/data";
+import { SCENARIO_CONFIG, USE_ARCHIVE_DATA, ARCHIVE_DATA_URL } from "@/constants/data";
 
 const BIN_SIZE = 60;            // SQL 粒度:60 秒一格(夠細,JS 端再做視覺重取樣)
 const HARD_MAX_SEC = 86400;     // 顯示上限:24:00:00(超過的資料不入 bar)
@@ -10,12 +10,21 @@ const step = 10 * 60;           // 滑桿的吸附步長:10 分鐘
 const MAX_BARS = 50;            // 視覺上希望 Timebar 最多畫幾條 bar
 
 // 動態 bins:起點 = 資料真正最小的 timestamp,終點 = MIN(資料 max, 24h)
+// local_archive 模式下 timestamps 是逗號分隔字串，先轉成 List 才能用 list_min/list_max
+// （跟 MainView.tsx 用同一套轉型邏輯，only timestamps 這裡用得到）。
 const buildQuery = (dataUrl: string) => `
-  WITH agent_ranges AS (
+  WITH src AS (
+    SELECT
+      ${USE_ARCHIVE_DATA
+        ? `list_transform(string_split(timestamps, ','), x -> CAST(x AS FLOAT)) AS timestamps`
+        : `timestamps`}
+    FROM read_parquet('${dataUrl}')
+  ),
+  agent_ranges AS (
     SELECT
       list_min(timestamps) AS t_start,
       list_max(timestamps) AS t_end
-    FROM read_parquet('${dataUrl}')
+    FROM src
   ),
   bounds AS (
     SELECT
@@ -66,7 +75,7 @@ export const TimeLine = () => {
     scenarioType: state.scenarioType,
   })));
 
-  const query = buildQuery(SCENARIO_CONFIG[scenarioType].dataUrl);
+  const query = buildQuery(USE_ARCHIVE_DATA ? ARCHIVE_DATA_URL : SCENARIO_CONFIG[scenarioType].dataUrl);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef<string | null>(null); 

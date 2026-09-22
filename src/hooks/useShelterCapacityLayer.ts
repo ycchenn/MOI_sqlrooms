@@ -6,7 +6,7 @@ import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { useMapStore } from '@/zustand/useMapStore';
 import { LAYER_IDS } from '@/constants/layers';
 import { SHELTER_STATUS_COLORS } from '@/constants/map';
-import { SCENARIO_CONFIG } from '@/constants/data';
+import { SCENARIO_CONFIG, USE_ARCHIVE_DATA } from '@/constants/data';
 
 const SCATTER_LAYER_ID = 'shelter-capacity-layer';
 const TEXT_LAYER_ID = 'shelter-capacity-labels';
@@ -65,7 +65,8 @@ export const useShelterCapacityLayer = () => {
     }))
   );
 
-  const query = buildQuery(SCENARIO_CONFIG[scenarioType].shelterCapacityUrl);
+  // local_archive 沒有 04_shelter_capacity 資料，強制走 buildQuery 既有的「null → 0 列」分支
+  const query = buildQuery(USE_ARCHIVE_DATA ? null : SCENARIO_CONFIG[scenarioType].shelterCapacityUrl);
   const { data } = useSql<Record<string, unknown>>({ query });
   const arrowTable = data?.arrowTable;
 

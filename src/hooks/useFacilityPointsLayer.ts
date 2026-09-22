@@ -6,7 +6,10 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import { useMapStore } from '@/zustand/useMapStore';
 import { LAYER_IDS } from '@/constants/layers';
 import { FACILITY_STATION_COLOR, FACILITY_SHELTER_COLOR } from '@/constants/map';
-import { BUS_STOPS_URL, METRO_STATIONS_URL, SHELTERS_URL } from '@/constants/data';
+import { BUS_STOPS_URL, METRO_STATIONS_URL, SHELTERS_URL, USE_ARCHIVE_DATA } from '@/constants/data';
+
+// local_archive 沒有 02_points/*.csv，用不碰網路的 0 列查詢頂替，避免 read_csv_auto 打到不存在的檔案
+const EMPTY_QUERY = (cols: string) => `SELECT ${cols.split(',').map((c) => `NULL AS ${c.trim()}`).join(', ')} WHERE FALSE`;
 
 type StationPoint = { id: string; name: string; kind: 'bus' | 'metro'; X: number; Y: number };
 type ShelterPoint = { id: string; name: string; capacity: number; X: number; Y: number };
@@ -48,13 +51,19 @@ export const useFacilityPointsLayer = () => {
   );
 
   const { data: busStops } = useSql<{ id: string; name: string; X: number; Y: number }>({
-    query: `SELECT stop_id AS id, stop_name AS name, X, Y FROM read_csv_auto('${BUS_STOPS_URL}')`,
+    query: USE_ARCHIVE_DATA
+      ? EMPTY_QUERY('id, name, X, Y')
+      : `SELECT stop_id AS id, stop_name AS name, X, Y FROM read_csv_auto('${BUS_STOPS_URL}')`,
   });
   const { data: metroStations } = useSql<{ id: string; name: string; X: number; Y: number }>({
-    query: `SELECT station_id AS id, station_name AS name, X, Y FROM read_csv_auto('${METRO_STATIONS_URL}')`,
+    query: USE_ARCHIVE_DATA
+      ? EMPTY_QUERY('id, name, X, Y')
+      : `SELECT station_id AS id, station_name AS name, X, Y FROM read_csv_auto('${METRO_STATIONS_URL}')`,
   });
   const { data: shelters } = useSql<ShelterPoint>({
-    query: `SELECT shelter_id AS id, shelter_name AS name, capacity, X, Y FROM read_csv_auto('${SHELTERS_URL}')`,
+    query: USE_ARCHIVE_DATA
+      ? EMPTY_QUERY('id, name, capacity, X, Y')
+      : `SELECT shelter_id AS id, shelter_name AS name, capacity, X, Y FROM read_csv_auto('${SHELTERS_URL}')`,
   });
 
   return useMemo(() => {
