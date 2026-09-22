@@ -72,6 +72,18 @@ yarn install
 npx http-server sim_data/20260910 -p 7780 --cors
 ```
 
+### 3+. （測試用）先改用測試資料
+啟用方式：
+
+1. 確認 `src/constants/data.ts` 裡 `USE_ARCHIVE_DATA = true`（預設就是 `true`；要切回
+   `sim_data` 那套就改成 `false`）
+2. 把資料放進一個資料夾（習慣上放專案根目錄的 `local_archive/`，裡面直接放
+   `data.parquet`、`profiles.json`，不要再包一層子資料夾；放在專案外面也可以，只是
+   `.gitignore` 只保證排除 `local_archive/` 這個名字）
+3. 啟動一個支援 Range Requests + CORS 的靜態伺服器指到那個資料夾：
+   ```bash
+   npx http-server local_archive -p 7780 --cors
+
 ### 4. 啟動服務
 本系統需要同時啟動資料伺服器（上一步）與前端開發環境（建議開兩個終端機視窗）：
 
