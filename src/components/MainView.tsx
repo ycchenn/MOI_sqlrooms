@@ -36,29 +36,24 @@ export const MainView: React.FC = () => {
     <div className="relative flex h-full w-full overflow-hidden bg-[#1e1e24]">
       {arrowTable && !isLoading ? (
         <>
-          {/* 最底層：地圖 */}
-          <div className="absolute inset-0 z-0">
-            <MapView arrowTable={arrowTable} />
-          </div>
-
-          {/* 正上方置中：情境類型切換 */}
-          <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10">
+          {/* 左側 Dashboard 側欄：固定寬度，跟地圖並排（不是疊在地圖上），
+              情境切換／運具選擇／圖層控制都先搬進來，之後 profile/schedule 也會加在這裡。 */}
+          <div className="w-[340px] shrink-0 h-full bg-[#2B2B38] border-r border-slate-700 overflow-y-auto p-4 flex flex-col gap-3 z-10">
             <ScenarioSwitcher />
-          </div>
-
-          {/* 右上角：運具選擇器 + 圖層控制。max-h + overflow-y-auto：小螢幕（視窗高度不夠）時
-              這一疊面板自己捲動，不會往下長到蓋住 Timebar。
-              ⚠ 240px 是量出來的：Timebar 實測高度 ~177px + 它的 bottom-5(20px) + 這裡自己的
-              top-5(20px) + ~20px 緩衝，兩個面板之間才不會貼到邊界甚至疊到。改 Timebar 高度時要
-              一起調這個數字，不然又會蓋回去。 */}
-          <div className="absolute top-5 right-5 z-10 flex flex-col gap-3 max-h-[calc(100vh-240px)] overflow-y-auto pr-1">
             <ModeSelector />
             <LayerPanel />
           </div>
 
-          {/* 正下方：時間軸 */}
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] z-10 max-w-6xl">
-            <Timebar />
+          {/* 右側：地圖 + 時間軸，佔側欄以外的剩餘寬度 */}
+          <div className="relative flex-1 h-full">
+            <div className="absolute inset-0 z-0">
+              <MapView arrowTable={arrowTable} />
+            </div>
+
+            {/* 正下方：時間軸（相對這塊地圖區置中，不會跑到側欄底下） */}
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] z-10 max-w-6xl">
+              <Timebar />
+            </div>
           </div>
         </>
       ) : (
