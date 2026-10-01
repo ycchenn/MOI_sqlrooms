@@ -17,6 +17,9 @@ export const SHELTERS_URL = urlFor('02_points/shelters.csv');
 // USE_ARCHIVE_DATA 分支到時候一起刪掉。
 export const USE_ARCHIVE_DATA = true;
 export const ARCHIVE_DATA_URL = urlFor('data.parquet');
+// agent 的人口統計資料（profile）+ 逐筆行程（schedule），目前只有側欄 Dashboard 在用，
+// 不是透過 DuckDB 查，是直接 fetch 整份 JSON（見 hooks/useProfiles.ts）。
+export const ARCHIVE_PROFILES_URL = urlFor('profiles.json');
 
 export type ScenarioType = 'shelter_in_place' | 'mass_evacuation';
 

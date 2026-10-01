@@ -9,6 +9,7 @@ import { ModeSelector } from './ModeSelector';
 import { LayerPanel } from './LayerPanel';
 import { ScenarioSwitcher } from './ScenarioSwitcher';
 import { Timebar } from './timebar/Timebar';
+import { AgentOverviewPanel } from './AgentOverviewPanel';
 
 export const MainView: React.FC = () => {
   const scenarioType = useMapStore(useShallow((s) => s.scenarioType));
@@ -39,6 +40,8 @@ export const MainView: React.FC = () => {
           {/* 左側 Dashboard 側欄：固定寬度，跟地圖並排（不是疊在地圖上），
               情境切換／運具選擇／圖層控制都先搬進來，之後 profile/schedule 也會加在這裡。 */}
           <div className="w-[340px] shrink-0 h-full bg-[#2B2B38] border-r border-slate-700 overflow-y-auto p-4 flex flex-col gap-3 z-10">
+            {/* 宏觀總覽：目前永遠顯示（還沒有「點選 agent 切換成微觀視圖」的互動，那是下一步） */}
+            <AgentOverviewPanel arrowTable={arrowTable} />
             <ScenarioSwitcher />
             <ModeSelector />
             <LayerPanel />
