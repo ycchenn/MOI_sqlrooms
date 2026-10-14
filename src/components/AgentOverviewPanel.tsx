@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type * as arrow from 'apache-arrow';
 
 import { useAgentDistanceStats } from '@/hooks/useAgentDistanceStats';
-import { useProfiles } from '@/hooks/useProfiles';
+import type { ProfilesData } from '@/hooks/useProfiles';
 
 // profiles.json 的 activities[].location_type 實測只有這三種值（Home/Work/Others），
 // 沒有土地使用分區那種細分類——這裡就是「Agent's Destination」能做到的上限，見討論紀錄。
@@ -12,9 +12,16 @@ const DESTINATION_LABELS: Record<string, string> = {
   Others: '其他',
 };
 
-export const AgentOverviewPanel: React.FC<{ arrowTable: arrow.Table | undefined }> = ({ arrowTable }) => {
+type AgentOverviewPanelProps = {
+  arrowTable: arrow.Table | undefined;
+  profiles: ProfilesData | null;
+  profilesLoading: boolean;
+};
+
+// profiles 從 MainView 統一抓一次、往下傳——這份 JSON 約 13MB，微觀視圖（AgentDetailPanel）
+// 也要用到同一份資料，不要兩邊各自呼叫 useProfiles() 重複 fetch。
+export const AgentOverviewPanel: React.FC<AgentOverviewPanelProps> = ({ arrowTable, profiles, profilesLoading }) => {
   const { agentCount, avgDistanceKm } = useAgentDistanceStats(arrowTable);
-  const { profiles, isLoading: profilesLoading } = useProfiles();
 
   const destinationCounts = useMemo(() => {
     if (!profiles) return null;

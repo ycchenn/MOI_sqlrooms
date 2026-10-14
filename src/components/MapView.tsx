@@ -48,7 +48,7 @@ function DeckGLOverlay(props: MapboxOverlayProps) {
 let lastViewState = INITIAL_VIEW_STATE;
 
 export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
-  const { time, setTime, isPlaying, selectedModes, tripsVisible, timeRange } = useMapStore(
+  const { time, setTime, isPlaying, selectedModes, tripsVisible, timeRange, setSelectedAgentId } = useMapStore(
     useShallow((state) => ({
       time: state.time,
       setTime: state.setTime,
@@ -56,6 +56,7 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
       selectedModes: state.selectedModes,
       tripsVisible: state.visibleLayers[LAYER_IDS.TRIPS] ?? true,
       timeRange: state.timeRange,
+      setSelectedAgentId: state.setSelectedAgentId,
     }))
   );
 
@@ -121,6 +122,26 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
     (info: any) => getTooltip(info) ?? getPointTooltip(info),
     [getTooltip, getPointTooltip]
   );
+
+  // 點擊選取 agent：縮小地圖時點軌跡（trips-layer，object 是完整 Arrow row，直接有 .id），
+  // 放大地圖時點位置點（trips-point，走 binary attributes 沒有 object，用 info.index 查
+  // usePointsLayer 算好的 meta.id）。點到其他圖層（站點/避難所這類）或空白處都不影響選取，
+  // 只有「點到空白地圖本身」才會取消選取。
+  const handleMapClick = useCallback((info: any) => {
+    if (info.layer?.id === 'trips-layer') {
+      const rawId = info.object?.id;
+      if (rawId != null) setSelectedAgentId(Number(rawId));
+      return;
+    }
+    if (info.layer?.id === 'trips-point') {
+      const m = pointsMetaRef.current[info.index];
+      if (m?.visible && m.id != null) setSelectedAgentId(m.id);
+      return;
+    }
+    if (!info.layer) {
+      setSelectedAgentId(null);
+    }
+  }, [setSelectedAgentId]);
 
   const facilityLayers = useFacilityPointsLayer();
   const stopCountsLayers = useStopCountsLayer(currentZoom);
@@ -200,8 +221,9 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
         trailLength: 600,
         
         colorMap: AGENT_MODE_TRIP_COLORS.flat().map((c) => c / 255),
-        filterBitMask: [computedBitmask], 
-        
+        filterBitMask: [computedBitmask],
+
+        pickable: true,
         widthMinPixels: 2,
         getWidth: 4,
         faded: true,
@@ -231,7 +253,7 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
         minZoom={MAP_MIN_ZOOM}
         maxZoom={MAP_MAX_ZOOM}
       >
-        <DeckGLOverlay layers={layers} getTooltip={combinedGetTooltip} />
+        <DeckGLOverlay layers={layers} getTooltip={combinedGetTooltip} onClick={handleMapClick} />
         <NavigationControl position="top-left" />
       </Map>
     </div>

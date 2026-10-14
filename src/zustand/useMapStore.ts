@@ -19,6 +19,8 @@ interface MapState {
   selectedModes: number[];
   visibleLayers: Record<LayerId, boolean>;
   scenarioType: ScenarioType;
+  // 地圖上點擊選中的 agent（Dashboard 側欄用來切換宏觀總覽／微觀個人視圖）；null = 沒有選取。
+  selectedAgentId: number | null;
 
   setTime: (t: number) => void;
   setTimeRange: (range: [number, number]) => void;
@@ -30,6 +32,7 @@ interface MapState {
   setViewTimeRange: (range: [number, number]) => void;
   toggleLayer: (id: LayerId) => void;
   setScenarioType: (type: ScenarioType) => void;
+  setSelectedAgentId: (id: number | null) => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
@@ -42,6 +45,7 @@ export const useMapStore = create<MapState>((set) => ({
   selectedModes: INITIAL_SELETED_MOBILITY_MODES_BITS,
   visibleLayers: INITIAL_VISIBLE_LAYERS,
   scenarioType: 'mass_evacuation', // 預設對齊現有的 pt10 設定
+  selectedAgentId: null,
 
   setTime: (t) => set({ time: t }),
   setTimeRange: (range) => set({ timeRange: range }),
@@ -69,4 +73,5 @@ export const useMapStore = create<MapState>((set) => ({
     timeRange: [0, 1800],
     isPlaying: false,
   }),
+  setSelectedAgentId: (id) => set({ selectedAgentId: id }),
 }));

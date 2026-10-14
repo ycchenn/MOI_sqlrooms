@@ -10,9 +10,14 @@ import { LayerPanel } from './LayerPanel';
 import { ScenarioSwitcher } from './ScenarioSwitcher';
 import { Timebar } from './timebar/Timebar';
 import { AgentOverviewPanel } from './AgentOverviewPanel';
+import { AgentDetailPanel } from './AgentDetailPanel';
+import { useProfiles } from '@/hooks/useProfiles';
 
 export const MainView: React.FC = () => {
   const scenarioType = useMapStore(useShallow((s) => s.scenarioType));
+  const selectedAgentId = useMapStore(useShallow((s) => s.selectedAgentId));
+  // 只在這裡抓一次 profiles.json（~13MB），宏觀/微觀兩個面板共用同一份，不重複 fetch。
+  const { profiles, isLoading: profilesLoading } = useProfiles();
   const dataUrl = USE_ARCHIVE_DATA ? ARCHIVE_DATA_URL : SCENARIO_CONFIG[scenarioType].dataUrl;
 
   // local_archive/data.parquet 的 paths/timestamps/modes 是逗號分隔的字串欄位（不是原本
@@ -40,8 +45,13 @@ export const MainView: React.FC = () => {
           {/* 左側 Dashboard 側欄：固定寬度，跟地圖並排（不是疊在地圖上），
               情境切換／運具選擇／圖層控制都先搬進來，之後 profile/schedule 也會加在這裡。 */}
           <div className="w-[340px] shrink-0 h-full bg-[#2B2B38] border-r border-slate-700 overflow-y-auto p-4 flex flex-col gap-3 z-10">
-            {/* 宏觀總覽：目前永遠顯示（還沒有「點選 agent 切換成微觀視圖」的互動，那是下一步） */}
-            <AgentOverviewPanel arrowTable={arrowTable} />
+            {/* 點了地圖上某個 agent 就切換成他的 profile+schedule（微觀），
+                沒選取時顯示全體統計（宏觀）——兩者共用同一個 selectedAgentId 開關。 */}
+            {selectedAgentId !== null ? (
+              <AgentDetailPanel agentId={selectedAgentId} profiles={profiles} />
+            ) : (
+              <AgentOverviewPanel arrowTable={arrowTable} profiles={profiles} profilesLoading={profilesLoading} />
+            )}
             <ScenarioSwitcher />
             <ModeSelector />
             <LayerPanel />

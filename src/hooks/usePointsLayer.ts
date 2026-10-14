@@ -21,9 +21,11 @@ export type PointMeta = {
   speedKmh: number;
   segDurationSec: number;
   statusLabel: string;
+  id: number | undefined; // 點擊選取用：這個 instance 對應哪個 agent（row.id，archive 模式才有）
 };
 
 type AgentCache = {
+  id: number | undefined;
   pathFlat: number[];   // 正規化後永遠是 flat: [x0,y0,x1,y1,...]
   timestamps: number[];
   modes: number[];      // 可以是 per-segment 或 per-trip 單一值
@@ -87,6 +89,7 @@ export const usePointsLayer = (
         const rawModes = row.modes?.toJSON ? row.modes.toJSON() : Array.from(row.modes ?? []);
 
         return {
+          id: row.id != null ? Number(row.id) : undefined,
           pathFlat,
           timestamps: (rawTs as any[]).map(Number),
           modes: (rawModes as any[]).map(Number),
@@ -100,12 +103,13 @@ export const usePointsLayer = (
         colors: new Uint8Array(rows.length * 4),
         radii: new Float32Array(rows.length),
         // 物件池：每幀直接改內容，不重新配置，避免 20000+ instance 每幀 GC
-        meta: Array.from({ length: rows.length }, () => ({
+        meta: agents.map((a) => ({
           visible: false,
           mode: 0,
           speedKmh: 0,
           segDurationSec: 0,
           statusLabel: '',
+          id: a.id,
         })),
         numInstances: rows.length,
       };
