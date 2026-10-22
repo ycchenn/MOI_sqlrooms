@@ -74,7 +74,7 @@ export const AgentDetailPanel: React.FC<AgentDetailPanelProps> = ({ agentId, pro
   }
 
   return (
-    <div className="bg-[#2B2B38]/90 border border-slate-700 p-4 rounded-lg text-white flex flex-col gap-4 font-mono shadow-xl max-h-[calc(100vh-40px)] overflow-y-auto">
+    <div className="bg-[#2B2B38]/90 border border-slate-700 p-4 rounded-lg text-white flex flex-col gap-4 font-mono shadow-xl max-h-[calc(100vh-40px)] overflow-y-auto scrollbar-subtle">
       <div className="flex items-center justify-between border-b border-slate-700 pb-2">
         <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Agent #{agentId}</span>
         <button className="text-xs text-cyan-400 hover:underline" onClick={() => setSelectedAgentId(null)}>

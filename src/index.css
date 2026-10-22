@@ -145,3 +145,25 @@
     @apply font-sans;
   }
 }
+/* 側欄用的低調捲軸：細、無軌道底色，平常只有淡淡一條，滑鼠移上去才稍微明顯。
+   Chrome/Edge/Firefox 吃標準的 scrollbar-width/color，Safari 吃下面的 ::-webkit-scrollbar。 */
+.scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.2) transparent;
+}
+.scrollbar-subtle:hover {
+  scrollbar-color: rgb(148 163 184 / 0.45) transparent;
+}
+.scrollbar-subtle::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-subtle::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-subtle::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184 / 0.2);
+  border-radius: 9999px;
+}
+.scrollbar-subtle:hover::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184 / 0.45);
+}

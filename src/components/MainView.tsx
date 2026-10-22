@@ -37,7 +37,7 @@ export const MainView: React.FC = () => {
         <>
           {/* 左側 Dashboard 側欄：固定寬度，跟地圖並排（不是疊在地圖上），
               情境切換／運具選擇／圖層控制都先搬進來，之後 profile/schedule 也會加在這裡。 */}
-          <div className="w-[340px] shrink-0 h-full bg-[#2B2B38] border-r border-slate-700 overflow-y-auto p-4 flex flex-col gap-3 z-10">
+          <div className="w-[340px] shrink-0 h-full bg-[#2B2B38] border-r border-slate-700 overflow-y-auto scrollbar-subtle p-4 flex flex-col gap-3 z-10">
             {/* 點了地圖上某個 agent 就切換成他的 profile+schedule（微觀），
                 沒選取時顯示全體統計（宏觀）——兩者共用同一個 selectedAgentId 開關。 */}
             {selectedAgentId !== null ? (
