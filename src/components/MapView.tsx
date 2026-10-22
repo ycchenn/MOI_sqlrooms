@@ -202,7 +202,7 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
   return (
     <div className="relative h-full w-full">
       {/* 為了方便除錯，暫時保留左上角的時鐘/zoom，之後可以拿掉 */}
-      <div className="absolute top-5 left-5 z-10 bg-black/80 text-white p-3 rounded font-mono">
+      <div className="absolute top-5 right-5 z-10 bg-black/80 text-white p-3 rounded font-mono">
         <div>Time: {formatDurationTo24Hour(time * 1000)}</div>
         <div>Zoom: {currentZoom.toFixed(2)}</div>
       </div>
