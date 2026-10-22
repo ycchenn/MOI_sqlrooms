@@ -13,9 +13,6 @@ import { useShallow } from '@sqlrooms/room-shell';
 import { useHeatmapLayer } from '../hooks/useHeatmapLayer';
 import { useODArcLayer } from '../hooks/useODArcLayer';
 import { usePointsLayer, ZOOM_THRESHOLD } from '../hooks/usePointsLayer';
-import { useFacilityPointsLayer } from '../hooks/useFacilityPointsLayer';
-import { useStopCountsLayer } from '../hooks/useStopCountsLayer';
-import { useShelterCapacityLayer } from '../hooks/useShelterCapacityLayer';
 
 
 // CARTO 的 dark-matter-gl-style 底層 OSM 資料官方文件寫最慢一年才重建一次（快則 3–6 個月），
@@ -65,29 +62,6 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
     setCurrentZoom(e.viewState.zoom);
     lastViewState = e.viewState;
   }, []);
-  // Stations/Shelters 的 hover tooltip：依 layer id 分辨物件形狀，顯示編號/名稱/容量
-  const getTooltip = useCallback((info: any) => {
-    const obj = info?.object;
-    if (!obj) return null;
-    if (info.layer?.id === 'facility-stations') {
-      const kindLabel = obj.kind === 'bus' ? '公車站' : '捷運站';
-      return { text: `${kindLabel}\n編號: ${obj.id}\n${obj.name ?? ''}` };
-    }
-    if (info.layer?.id === 'facility-shelters') {
-      return { text: `避難所\n編號: ${obj.id}\n${obj.name ?? ''}\n容量: ${obj.capacity ?? '—'} 人` };
-    }
-    if (info.layer?.id === 'stop-counts-layer') {
-      const kindLabel = obj.mode === 8 ? '公車站' : '捷運站';
-      return { text: `${kindLabel}\n候車人數: ${obj.waiting}` };
-    }
-    if (info.layer?.id === 'shelter-capacity-layer') {
-      const pct = Math.round((obj.loadRatio ?? 0) * 100);
-      return {
-        text: `避難所\n編號: ${obj.id}\n${obj.name ?? ''}\n收容: ${obj.currentCount} / ${obj.capacity ?? '—'} 人\n壅擠度: ${pct}%（${obj.status}）`,
-      };
-    }
-    return null;
-  }, []);
 
   // 加這段
   const [debouncedTimeRange, setDebouncedTimeRange] = useState<[number, number]>(timeRange);
@@ -118,14 +92,10 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
     };
   }, []);
 
-  const combinedGetTooltip = useCallback(
-    (info: any) => getTooltip(info) ?? getPointTooltip(info),
-    [getTooltip, getPointTooltip]
-  );
 
   // 點擊選取 agent：縮小地圖時點軌跡（trips-layer，object 是完整 Arrow row，直接有 .id），
   // 放大地圖時點位置點（trips-point，走 binary attributes 沒有 object，用 info.index 查
-  // usePointsLayer 算好的 meta.id）。點到其他圖層（站點/避難所這類）或空白處都不影響選取，
+  // usePointsLayer 算好的 meta.id）。點到其他圖層（Heatmap/OD Arc）不影響選取，
   // 只有「點到空白地圖本身」才會取消選取。
   const handleMapClick = useCallback((info: any) => {
     if (info.layer?.id === 'trips-layer') {
@@ -143,10 +113,6 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
     }
   }, [setSelectedAgentId]);
 
-  const facilityLayers = useFacilityPointsLayer();
-  const stopCountsLayers = useStopCountsLayer(currentZoom);
-  const shelterCapacityLayers = useShelterCapacityLayer();
-  
   // 🌟 修復時間凍結：完美的 requestAnimationFrame 迴圈
   useEffect(() => {
     if (!isPlaying) return;
@@ -198,16 +164,10 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
     return selectedModes.reduce((acc, modeBit) => acc | modeBit, 0);
   }, [selectedModes]);
 
-  // 順序:heatmap → od-arc → facilities → points → stop-counts → shelter-capacity → trips（後 push 的畫在上面）
-  // ⚠ points 刻意排在 stop-counts/shelter-capacity 之前：代理人剛好停在站點/避難所座標上時，
-  // 讓候車人潮泡泡/飽和率圈蓋在 points 上面（泡泡本來就比較大、代表匯總資訊，蓋掉底下單點
-  // 才合理），不然兩個顏色相近、不透明度都調高的圓疊在一起，會變成一個圓「缺一角」的詭異形狀
+  // 順序:heatmap → od-arc → points → trips（後 push 的畫在上面）
   layers.push(...heatmapLayers);
   if (odArcLayer) layers.push(odArcLayer);
-  layers.push(...facilityLayers);
   layers.push(...pointsLayers);
-  layers.push(...stopCountsLayers);
-  layers.push(...shelterCapacityLayers);
 
   if (arrowTable && tripsVisible && currentZoom <= ZOOM_THRESHOLD) {
     layers.push(
@@ -253,7 +213,7 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
         minZoom={MAP_MIN_ZOOM}
         maxZoom={MAP_MAX_ZOOM}
       >
-        <DeckGLOverlay layers={layers} getTooltip={combinedGetTooltip} onClick={handleMapClick} />
+        <DeckGLOverlay layers={layers} getTooltip={getPointTooltip} onClick={handleMapClick} />
         <NavigationControl position="top-left" />
       </Map>
     </div>
