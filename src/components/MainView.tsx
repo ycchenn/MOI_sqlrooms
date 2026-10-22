@@ -45,14 +45,19 @@ export const MainView: React.FC = () => {
             ) : (
               <AgentOverviewPanel arrowTable={arrowTable} profiles={profiles} profilesLoading={profilesLoading} />
             )}
-            <ModeSelector arrowTable={arrowTable} />
-            <LayerPanel />
+            {/* 選了某個 agent 時側欄只留他的 Schedule，總覽用的甜甜圈/圖層控制先收起來 */}
+            {selectedAgentId === null && (
+              <>
+                <ModeSelector arrowTable={arrowTable} />
+                <LayerPanel />
+              </>
+            )}
           </div>
 
           {/* 右側：地圖 + 時間軸，佔側欄以外的剩餘寬度 */}
           <div className="relative flex-1 h-full">
             <div className="absolute inset-0 z-0">
-              <MapView arrowTable={arrowTable} />
+              <MapView arrowTable={arrowTable} profiles={profiles} />
             </div>
 
             {/* 正下方：時間軸（相對這塊地圖區置中，不會跑到側欄底下） */}

@@ -18,12 +18,7 @@ const parseHHMM = (s: string): number => {
 
 const DAY_SECONDS = 86400;
 
-// 跟 AgentOverviewPanel 的 DESTINATION_LABELS 同一組分類，顏色拿來畫下面的迷你時間軸。
-const LOCATION_TYPE_COLOR: Record<string, string> = {
-  Home: 'bg-sky-500',
-  Work: 'bg-amber-500',
-  Others: 'bg-violet-500',
-};
+// 跟 AgentOverviewPanel 的 DESTINATION_LABELS 同一組分類
 const LOCATION_TYPE_LABEL: Record<string, string> = {
   Home: '住家',
   Work: '工作',
@@ -78,8 +73,6 @@ export const AgentDetailPanel: React.FC<AgentDetailPanelProps> = ({ agentId, pro
     );
   }
 
-  const { profile } = entry;
-
   return (
     <div className="bg-[#2B2B38]/90 border border-slate-700 p-4 rounded-lg text-white flex flex-col gap-4 font-mono shadow-xl max-h-[calc(100vh-40px)] overflow-y-auto">
       <div className="flex items-center justify-between border-b border-slate-700 pb-2">
@@ -89,56 +82,7 @@ export const AgentDetailPanel: React.FC<AgentDetailPanelProps> = ({ agentId, pro
         </button>
       </div>
 
-      {/* Profile */}
-      <div className="flex flex-col gap-2">
-        <div className="text-[10px] text-slate-400 uppercase tracking-wide">Profile</div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-          <div><span className="text-slate-500">年齡</span> {profile.age}</div>
-          <div><span className="text-slate-500">教育</span> {profile.education}</div>
-          <div className="col-span-2"><span className="text-slate-500">職業</span> {profile.occupation}</div>
-          <div className="col-span-2"><span className="text-slate-500">收入</span> {profile.income}</div>
-        </div>
-        {profile.mobility?.length > 0 && (
-          <div className="flex gap-1 flex-wrap">
-            {profile.mobility.map((m) => (
-              <span key={m} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-cyan-300">
-                {m}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 迷你時間軸（Timebar）：一天 24 小時的橫條，依 location_type 上色，
-          白色直線標出目前模擬時間落在哪一段——跟下面逐筆 schedule 列表是同一份資料的兩種呈現。 */}
-      <div className="flex flex-col gap-1">
-        <div className="text-[10px] text-slate-400 uppercase tracking-wide">Daily Timebar</div>
-        <div className="relative h-4 rounded-sm overflow-hidden bg-slate-800">
-          {activities.map((act, i) => (
-            <div
-              key={i}
-              className={`absolute top-0 h-full ${LOCATION_TYPE_COLOR[act.location_type] ?? 'bg-slate-600'} ${
-                i === currentIndex ? 'opacity-100' : 'opacity-50'
-              }`}
-              style={{
-                left: `${(act.startSec / DAY_SECONDS) * 100}%`,
-                width: `${((act.endSec - act.startSec) / DAY_SECONDS) * 100}%`,
-              }}
-            />
-          ))}
-          <div
-            className="absolute top-0 h-full w-[2px] bg-white"
-            style={{ left: `${(todaySec / DAY_SECONDS) * 100}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-[9px] text-slate-500">
-          <span>00:00</span>
-          <span>12:00</span>
-          <span>24:00</span>
-        </div>
-      </div>
-
-      {/* Schedule 逐筆列表，跟著上面時間軸、也跟著主時間軸的 time 同步反白目前這一筆 */}
+      {/* Schedule 逐筆列表，跟著主時間軸的 time 同步反白目前這一筆。Profile 移到地圖上的資訊框（MapView tooltip）。 */}
       <div className="flex flex-col gap-2">
         <div className="text-[10px] text-slate-400 uppercase tracking-wide">Schedule</div>
         <div className="flex flex-col gap-1">

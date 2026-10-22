@@ -14,6 +14,7 @@ import { useHeatmapLayer } from '../hooks/useHeatmapLayer';
 import { useODArcLayer } from '../hooks/useODArcLayer';
 import { usePointsLayer, ZOOM_THRESHOLD } from '../hooks/usePointsLayer';
 import { formatDurationTo24Hour } from './timebar/utils';
+import type { ProfilesData } from '../hooks/useProfiles';
 
 
 // CARTO 的 dark-matter-gl-style 底層 OSM 資料官方文件寫最慢一年才重建一次（快則 3–6 個月），
@@ -45,7 +46,11 @@ function DeckGLOverlay(props: MapboxOverlayProps) {
 // 掛載不會清掉模組變數（只有整頁重新整理才會）。
 let lastViewState = INITIAL_VIEW_STATE;
 
-export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
+// 資訊框內容是組成 HTML 塞進 deck.gl tooltip，profile 欄位來自外部 JSON，要先跳脫
+const escapeHtml = (v: unknown) =>
+  String(v ?? '—').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | null }> = ({ arrowTable, profiles }) => {
   const { time, setTime, isPlaying, selectedModes, tripsVisible, timeRange, setSelectedAgentId } = useMapStore(
     useShallow((state) => ({
       time: state.time,
@@ -88,10 +93,31 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
     if (!m || !m.visible) return null;
     const modeLabel = MODE_BIT_LABELS[m.mode] ?? '未知';
     const speedText = m.segDurationSec > 0 ? `${m.speedKmh.toFixed(1)} km/h` : '—';
+    const lines = [
+      `路徑編號: ${info.index}`,
+      `運具: ${modeLabel}`,
+      `目前路段時速: ${speedText}${m.statusLabel ? `（${m.statusLabel}）` : ''}`,
+    ].map(escapeHtml);
+
+    // 原本在 dashboard 的 Profile 移到這裡：滑過去就看得到這個人的基本資料，
+    // 點下去 dashboard 只留 Schedule（見 AgentDetailPanel）。
+    const profile = m.id != null ? profiles?.[String(m.id)]?.profile : undefined;
+    const profileHtml = profile
+      ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #475569">` +
+        [
+          `年齡: ${escapeHtml(profile.age)}&nbsp;&nbsp;教育: ${escapeHtml(profile.education)}`,
+          `職業: ${escapeHtml(profile.occupation)}`,
+          `收入: ${escapeHtml(profile.income)}`,
+          profile.mobility?.length ? `可用運具: ${escapeHtml(profile.mobility.join(', '))}` : '',
+        ].filter(Boolean).join('<br/>') +
+        `</div>`
+      : '';
+
     return {
-      text: `路徑編號: ${info.index}\n運具: ${modeLabel}\n目前路段時速: ${speedText}${m.statusLabel ? `（${m.statusLabel}）` : ''}`,
+      html: lines.join('<br/>') + profileHtml,
+      style: { fontSize: '12px', lineHeight: '1.5', maxWidth: '280px' },
     };
-  }, []);
+  }, [profiles]);
 
 
   // 點擊選取 agent：縮小地圖時點軌跡（trips-layer，object 是完整 Arrow row，直接有 .id），
