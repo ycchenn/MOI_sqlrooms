@@ -45,7 +45,7 @@ export const MainView: React.FC = () => {
             ) : (
               <AgentOverviewPanel arrowTable={arrowTable} profiles={profiles} profilesLoading={profilesLoading} />
             )}
-            <ModeSelector />
+            <ModeSelector arrowTable={arrowTable} />
             <LayerPanel />
           </div>
 

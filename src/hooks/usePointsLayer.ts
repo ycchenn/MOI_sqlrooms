@@ -6,6 +6,7 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import { useMapStore } from '@/zustand/useMapStore';
 import { LAYER_IDS } from '@/constants/layers';
 import { AGENT_MODE_TRIP_COLORS } from '@/constants/map';
+import { getAgentCache, getAgentStateAt, type AgentCache } from '@/lib/agentCache';
 
 const LAYER_ID = 'trips-point';
 // zoom > 此值（拉近）才顯示點位；zoom ≤ 此值時由 TripsLayer 尾巴呈現
@@ -22,29 +23,6 @@ export type PointMeta = {
   segDurationSec: number;
   statusLabel: string;
   id: number | undefined; // 點擊選取用：這個 instance 對應哪個 agent（row.id，archive 模式才有）
-};
-
-type AgentCache = {
-  id: number | undefined;
-  pathFlat: number[];   // 正規化後永遠是 flat: [x0,y0,x1,y1,...]
-  timestamps: number[];
-  modes: number[];      // 可以是 per-segment 或 per-trip 單一值
-};
-
-// timestamps 對每個 agent 是遞增排序，二分搜尋找出 time 落在哪個 segment：
-// 回傳 j 使得 timestamps[j] <= time <= timestamps[j+1]。
-// 取代原本「每幀都從 0 開始線性掃描」的作法，時間複雜度從 O(numPoints) 降到 O(log numPoints)，
-// 且不受時間倒退（拖曳/循環重播）影響，不需要跨幀快取 index。
-const findSegmentIndex = (timestamps: number[], time: number): number => {
-  let lo = 0;
-  let hi = timestamps.length - 2;
-  if (hi < 0) return -1;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
-    if (timestamps[mid] <= time) lo = mid;
-    else hi = mid - 1;
-  }
-  return lo;
 };
 
 export const usePointsLayer = (
@@ -76,32 +54,14 @@ export const usePointsLayer = (
 
     // arrowTable 換掉時才重建快取，避免每幀 toArray()
     if (memoryRef.current?.sourceData !== arrowTable) {
-      const rows = arrowTable.toArray();
-      const agents: AgentCache[] = rows.map((row: any) => {
-        // paths: List<FixedSizeList<2,Float32>> → toJSON() 回傳 [[x0,y0],...] 或已是 flat
-        const rawPaths = row.paths?.toJSON ? row.paths.toJSON() : Array.from(row.paths ?? []);
-        const isFlat = rawPaths.length > 0 && typeof rawPaths[0] === 'number';
-        const pathFlat: number[] = isFlat
-          ? Array.from(rawPaths as number[])
-          : (rawPaths as any[]).flatMap((pt: any) => [Number(pt[0]), Number(pt[1])]);
-
-        const rawTs = row.timestamps?.toJSON ? row.timestamps.toJSON() : Array.from(row.timestamps ?? []);
-        const rawModes = row.modes?.toJSON ? row.modes.toJSON() : Array.from(row.modes ?? []);
-
-        return {
-          id: row.id != null ? Number(row.id) : undefined,
-          pathFlat,
-          timestamps: (rawTs as any[]).map(Number),
-          modes: (rawModes as any[]).map(Number),
-        };
-      });
+      const agents = getAgentCache(arrowTable);
 
       memoryRef.current = {
         sourceData: arrowTable,
         agents,
-        positions: new Float32Array(rows.length * 3),
-        colors: new Uint8Array(rows.length * 4),
-        radii: new Float32Array(rows.length),
+        positions: new Float32Array(agents.length * 3),
+        colors: new Uint8Array(agents.length * 4),
+        radii: new Float32Array(agents.length),
         // 物件池：每幀直接改內容，不重新配置，避免 20000+ instance 每幀 GC
         meta: agents.map((a) => ({
           visible: false,
@@ -111,7 +71,7 @@ export const usePointsLayer = (
           statusLabel: '',
           id: a.id,
         })),
-        numInstances: rows.length,
+        numInstances: agents.length,
       };
     }
 
@@ -119,40 +79,22 @@ export const usePointsLayer = (
     const dynamicRadius = Math.min(8, Math.max(2, currentZoom - 8));
 
     for (let i = 0; i < numInstances; i++) {
-      const { pathFlat, timestamps, modes } = agents[i];
-      const numPoints = timestamps.length;
+      const agent = agents[i];
+      const { pathFlat, timestamps } = agent;
       const m = meta[i];
+      const state = getAgentStateAt(agent, time);
 
-      if (!pathFlat.length || numPoints === 0) {
+      if (!state || !selectedModes.includes(state.mode)) {
         colors[i * 4 + 3] = 0;
         radii[i] = 0;
         m.visible = false;
         continue;
       }
 
-      const tStart = timestamps[0];
-      const tEnd = timestamps[numPoints - 1];
-
-      if (numPoints < 2 || time < tStart || time > tEnd) {
-        colors[i * 4 + 3] = 0;
-        radii[i] = 0;
-        m.visible = false;
-        continue;
-      }
-
-      const j = findSegmentIndex(timestamps, time);
+      const j = state.segment;
+      const currentMode = state.mode;
       const t1 = timestamps[j];
       const t2 = timestamps[j + 1];
-
-      // modes 可能是 per-segment（長度 = numPoints-1）或 per-trip（長度 1）
-      const currentMode = modes.length > 1 ? modes[j] : (modes[0] ?? 1);
-
-      if (!selectedModes.includes(currentMode)) {
-        colors[i * 4 + 3] = 0;
-        radii[i] = 0;
-        m.visible = false;
-        continue;
-      }
 
       const p1x = pathFlat[j * 2];
       const p1y = pathFlat[j * 2 + 1];

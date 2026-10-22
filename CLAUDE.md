@@ -61,7 +61,8 @@ All in-browser SQL goes through **one** DuckDB-WASM instance — the SQLRooms co
 
 ### Mode filtering (GPU bitmask)
 - Mobility modes (WALK/CAR/BUS/RAIL) map to bits `[1,2,8,16]` (`src/constants/map.ts`, `MOBILITY_MODE_BITS`; bit `4` is a reserved/unused slot, never present in the source data).
-- `ModeSelector` toggles bits in `selectedModes`; `MapView` OR-reduces them into a single bitmask passed as `filterBitMask`.
+- `ModeSelector` is a hand-drawn SVG donut chart (no chart library): each slice is the number of agents using that mode at the current `time` (`hooks/useModeShares.ts`), and clicking a slice or its legend row toggles that bit in `selectedModes` (multi-select; unselected slices dim but stay clickable, zero-count modes are only in the legend). `MapView` OR-reduces `selectedModes` into a single bitmask passed as `filterBitMask`.
+- `src/lib/agentCache.ts` (`getAgentCache` WeakMap-cached per `arrowTable`, `getAgentStateAt`) is the shared per-agent parse + "which segment/mode at time t" logic used by both `usePointsLayer` and `useModeShares`, so the donut counts match the dots on the map.
 - `ModeObjectPropsExtension` (`.../arrowTripsLayer/utils/extensions.ts`) is a Deck.gl `LayerExtension` that adds the per-vertex `mode_type` attribute and pushes the bitmask + `colorMap` as a shader uniform (`mode-shader-module.ts`), so show/hide happens in the WebGL shader.
 
 ### Timebar
