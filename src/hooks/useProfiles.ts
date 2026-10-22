@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ARCHIVE_PROFILES_URL, USE_ARCHIVE_DATA } from '@/constants/data';
+import { ARCHIVE_PROFILES_URL } from '@/constants/data';
 
 export type AgentActivity = {
   Activity: string;
@@ -31,18 +31,13 @@ export type AgentEntry = {
 
 export type ProfilesData = Record<string, AgentEntry>;
 
-// profiles.json（archive 專屬，sim_data 沒有對應資料）不是 Parquet，不走 DuckDB，
+// profiles.json 不是 Parquet，不走 DuckDB，
 // 是整份 fetch 下來快取在記憶體——13MB 左右，只在第一次掛載時抓一次。
 export const useProfiles = () => {
   const [profiles, setProfiles] = useState<ProfilesData | null>(null);
-  const [isLoading, setIsLoading] = useState(USE_ARCHIVE_DATA);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!USE_ARCHIVE_DATA) {
-      setIsLoading(false);
-      return;
-    }
-
     let cancelled = false;
     setIsLoading(true);
 

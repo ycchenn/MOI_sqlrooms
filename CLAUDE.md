@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-A high-performance city-mobility trajectory visualizer built on **SQLRooms + Deck.gl + DuckDB-WASM**. It renders 20,000+ Agent-Based Modeling (ABM) trajectories from Parquet entirely in the browser, using zero-copy Arrow → GPU rendering and in-browser SQL aggregation. Originally derived from the official SQLRooms `deckgl-example`; now extended into a **civil-protection scenario viewer** with two top-level scenario types (shelter-in-place / mass-evacuation), each with its own trajectory data, OD arcs, and scenario-specific overlay layers (transit stations/waiting crowds vs. shelters/capacity).
+A high-performance city-mobility trajectory visualizer built on **SQLRooms + Deck.gl + DuckDB-WASM**. It renders 20,000+ Agent-Based Modeling (ABM) trajectories from Parquet entirely in the browser, using zero-copy Arrow → GPU rendering and in-browser SQL aggregation. Originally derived from the official SQLRooms `deckgl-example`; now being redesigned (MOI ABM redesign) around the mentor-provided archive data: one trajectory dataset plus per-agent profile/schedule data, shown with a left dashboard sidebar (city overview / selected-agent detail). An earlier shelter-in-place / mass-evacuation scenario switcher and its overlays belonged to a different project and were removed — recover from git history if ever needed.
 
 ## Commands
 
@@ -16,39 +16,32 @@ yarn lint         # eslint .
 yarn preview      # preview production build
 ```
 
-There is no test suite. `.env` needs `VITE_DUCKDB_CONNECTION_STRING` (base URL of a local HTTP server that supports **Range Requests**, default `http://localhost:7780`) — every actual filename is resolved from `src/constants/data.ts`'s `SCENARIO_CONFIG`, keyed by the currently-selected scenario type (see below), not from individual `.env` vars anymore. `VITE_MAPTILER_API_KEY` is optional: set it to switch the basemap (`MapView.tsx`'s `MAP_STYLE`) from CARTO's `dark-matter-gl-style` (OSM data rebuilt as infrequently as once a year per CARTO's own docs) to MapTiler's `dataviz-dark` (rebuilt weekly) — get a free key at cloud.maptiler.com/account/keys. Missing the key just falls back to CARTO with a console warning, it doesn't break local dev.
+There is no test suite. `.env` needs `VITE_DUCKDB_CONNECTION_STRING` (base URL of a local HTTP server that supports **Range Requests**, default `http://localhost:7780`) — the app reads `data.parquet` and `profiles.json` from the root of that server (`ARCHIVE_DATA_URL`/`ARCHIVE_PROFILES_URL` in `src/constants/data.ts`). `VITE_MAPTILER_API_KEY` is optional: set it to switch the basemap (`MapView.tsx`'s `MAP_STYLE`) from CARTO's `dark-matter-gl-style` (OSM data rebuilt as infrequently as once a year per CARTO's own docs) to MapTiler's `dataviz-dark` (rebuilt weekly) — get a free key at cloud.maptiler.com/account/keys. Missing the key just falls back to CARTO with a console warning, it doesn't break local dev.
 
-### Local test data (`sim_data/`)
+### Local data (mentor archive)
 
-Local development points at `sim_data/20260910/` — a delivered test batch (git-ignored, ask for a fresh copy if missing) with its own `README.md` describing 5 subfolders (`01_trajectory`, `02_points`, `03_stop_counts`, `04_shelter_capacity`, `05_moi_sim`) across 6 scenarios (`pt10/20/40`, `evac_ratio10/20/40`). This app only wires up **`05_moi_sim`** (trips + OD arc — schema-compatible drop-in for the existing `paths/timestamps/modes` query), fixed to one sub-scenario per type (`pt10` for mass-evacuation, `evac_ratio10` for shelter-in-place — see `SCENARIO_CONFIG`). The `02_points`/`03_stop_counts`/`04_shelter_capacity` overlays (stations, shelters, stop counts, shelter capacity) used to be wired up but were removed — they belong to a different project's scenarios; recover them from git history if ever needed. `01_trajectory` and `05_moi_sim/road_service_*.geojson` are **not** wired up.
-
-Since `sim_data/` isn't served anywhere in production, local dev needs a standalone static file server with Range + CORS support pointed at it, e.g.:
+The data is the mentor-provided `archive.zip` (git-ignored, never committed — ask for a fresh copy if missing), unzipped to a folder containing `data.parquet` (trajectories; `paths`/`timestamps`/`modes` are **comma-separated strings**, converted to typed lists in SQL via `string_split` + `list_transform`) and `profiles.json` (~13MB, per-agent demographics + schedule). Serve that folder with a standalone static file server with Range + CORS support, e.g.:
 
 ```bash
-npx http-server sim_data/20260910 -p 7780 --cors
+npx http-server path/to/Archive -p 7780 --cors
 ```
 
-`VITE_DUCKDB_CONNECTION_STRING` just needs to match that server's base URL.
+`VITE_DUCKDB_CONNECTION_STRING` just needs to match that server's base URL. (The older `sim_data/20260910/` test batch is no longer read by the app.)
 
 ## Architecture
 
-### Scenario switching (shelter-in-place vs. mass-evacuation)
-
-- `useMapStore.scenarioType: 'shelter_in_place' | 'mass_evacuation'` (default `'mass_evacuation'`) is the single source of truth for which dataset is loaded; `setScenarioType(type)` also resets `time`/`timeRange`/`isPlaying` to their defaults, since the two scenario types have wildly different valid time windows (`pt*` ≈ 70h, `evac_ratio*` ≈ 1.5h) and leaving the playhead where it was would silently show nothing.
-- `<ScenarioSwitcher />` (top-center of the map) is the only UI for this — two buttons, labels sourced from `SCENARIO_CONFIG[type].label`.
-- `src/constants/data.ts`'s `SCENARIO_CONFIG: Record<ScenarioType, ScenarioFileSet>` is the file-path lookup table (`dataUrl`/`odDataUrl` per type). Every consumer (`MainView.tsx`, `timebar/TimeLine.tsx`, `useODArcLayer.ts`) reads `scenarioType` from the store and rebuilds its query string from `SCENARIO_CONFIG` on every render — `useSql` refetches automatically when the query string changes, so switching scenarios is just a state update, no manual invalidation.
-
 ### Single DuckDB engine (SQLRooms connector)
 All in-browser SQL goes through **one** DuckDB-WASM instance — the SQLRooms connector created in `src/store.ts` via `createWasmDuckDbConnector()`. It drives the app's data loads below; the RoomShell chrome that used to expose it directly (sidebar with a SQL Editor / Data panel / file-dropzone / command palette toggle) was removed from `src/room.tsx` — it's end-user-facing product now, not a debug dashboard. `DataPanel.tsx` and the `data` panel registration in `src/store.ts` are still there (unreachable, harmless) so the sidebar can be added back trivially if that tooling is needed again later.
-- **Trajectory load** — `MainView.tsx` uses the SQLRooms `useSql({query})` hook (`SELECT paths, timestamps, modes FROM read_parquet('${SCENARIO_CONFIG[scenarioType].dataUrl}')`); the resulting `data.arrowTable` is passed as a **prop** to `<MapView arrowTable=... />`, which in turn feeds it to the trips layer, `useHeatmapLayer`, and `usePointsLayer` (all three share the one query result — zero extra DuckDB round-trips).
-- **Histogram** — `timebar/TimeLine.tsx` uses `useSql` for the time-bin aggregation query, also against the current scenario's `dataUrl`.
-- **OD-arc load** — `hooks/useODArcLayer.ts` runs its own `useSql({query: 'SELECT * FROM read_parquet(odDataUrl)'})` against the scenario's OD parquet, since OD data has a different schema/granularity than the trip trajectories. Still the same connector, just a second query.
+- **Trajectory load** — `MainView.tsx` uses the SQLRooms `useSql({query})` hook (`SELECT id, paths, timestamps, modes FROM read_parquet(ARCHIVE_DATA_URL)`, with the string → list conversion above); the resulting `data.arrowTable` is passed as a **prop** to `<MapView arrowTable=... />`, which in turn feeds it to the trips layer, `useHeatmapLayer`, and `usePointsLayer` (all three share the one query result — zero extra DuckDB round-trips).
+- **Histogram** — `timebar/TimeLine.tsx` uses `useSql` for the time-bin aggregation query, also against `ARCHIVE_DATA_URL`.
+- **OD-arc load (placeholder)** — `hooks/useODArcLayer.ts` is kept for later: the archive has no OD parquet, so it currently runs a guaranteed-zero-row query and the OD Arc layer draws nothing. Swap in a real query (OD file, or origins/destinations derived from trajectories) when available.
+- **Profiles load** — `hooks/useProfiles.ts` fetches `profiles.json` once (not via DuckDB); `MainView.tsx` shares it between `AgentOverviewPanel` and `AgentDetailPanel`.
 
 `useSql` returns `{ data: { arrowTable, rows(), toArray() }, isLoading, error }` and handles connector-init timing. Remote `read_parquet('http://...')` works natively in duckdb-wasm via Range requests. (Historically there were three separate DuckDB instances + a `window.globalArrowTable` hack; that was consolidated — do not reintroduce it.)
 
 ### State management
 - **SQLRooms RoomShell store** (`src/store.ts`, `useRoomStore`) — room layout/panels; `dataSources` intentionally empty (data is loaded on demand via `useSql`). Panels: `main` (the map view, the only one actually reachable from the UI) and `data` (`placement: 'sidebar'` — registered but currently unreachable since `src/room.tsx` no longer renders `<RoomShell.Sidebar>`). `src/room.tsx` also passes `tileClassName="p-0 bg-transparent"` to `<RoomShell.LayoutComposer>` to kill `@sqlrooms/layout`'s default per-tile `p-2 bg-secondary/10` padding/tint — otherwise the light-theme tint shows as a border around the map.
-- **Zustand `useMapStore`** (`src/zustand/useMapStore.ts`) — all playback/UI state: `time`, `timeRange`, `displayTimeRange`, `viewTimeRange`, `isPlaying`, `timeScale`, `selectedModes`, `visibleLayers`, `scenarioType` (see the comment block at the top of the file for what each time range means).
+- **Zustand `useMapStore`** (`src/zustand/useMapStore.ts`) — all playback/UI state: `time`, `timeRange`, `displayTimeRange`, `viewTimeRange`, `isPlaying`, `timeScale`, `selectedModes`, `visibleLayers`, `selectedAgentId` (see the comment block at the top of the file for what each time range means).
 - The rAF playback loop in `MapView.tsx` reads/writes Zustand via `useMapStore.getState()` to dodge closure-stale-value traps. Components subscribe with `useShallow` + atomic selectors to avoid re-renders during playback.
 
 ### Layer registry & visibility
@@ -76,12 +69,12 @@ All in-browser SQL goes through **one** DuckDB-WASM instance — the SQLRooms co
 
 ## Conventions
 - **`apache-arrow` is pinned to `17.0.0`** (exact, plus `resolutions`/`overrides` in `package.json`). Do NOT bump it. The SQLRooms packages pin `17.0.0` and `@duckdb/duckdb-wasm` requires `^17`; if a second arrow version (e.g. 21) gets hoisted, the SQLRooms connector's `new arrow.Table(batches)` receives RecordBatches built by a *different* arrow instance, the internal `instanceof RecordBatch` check fails, and the Table constructor recurses infinitely → `RangeError: Maximum call stack size exceeded` on every query. Keep one arrow version across the whole tree.
-- **Time unit is seconds everywhere** (0–86400, though `evac_ratio*`/`pt*` scenario timestamps can exceed 86400 since the underlying sim runs up to 72h), in both Zustand and DuckDB queries. Do not mix in JS milliseconds (formatting helpers in `timebar/utils.ts` multiply by 1000 only for display).
+- **Time unit is seconds everywhere** (0–86400), in both Zustand and DuckDB queries. Do not mix in JS milliseconds (formatting helpers in `timebar/utils.ts` multiply by 1000 only for display).
 - Path alias `@/` → `src/` (configured in `vite.config.ts` and tsconfig).
 - shadcn/ui configured via `components.json` (style `radix-nova`, base color neutral); UI primitives in `src/components/ui/`.
 - Much of the codebase has Traditional Chinese comments; match the surrounding language when editing existing files.
 - Deploy target is Netlify (`netlify.toml`): `npm run build` → `dist`, with `CI=false` and increased Node heap.
-- `sim_data/` is git-ignored (large delivered test batch, not part of the repo) — local dev depends on it existing on disk plus a standalone http-server pointed at it (see Commands above). Don't assume it's present in CI/build environments.
+- The archive data is not in the repo — local dev depends on it existing on disk plus a standalone http-server pointed at it (see Commands above). Don't assume it's present in CI/build environments.
 
 # 個人偏好
 

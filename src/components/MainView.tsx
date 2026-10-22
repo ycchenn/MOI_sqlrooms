@@ -2,37 +2,30 @@ import { SpinnerPane } from '@sqlrooms/ui';
 import { useSql } from '@sqlrooms/duckdb';
 import { useShallow } from '@sqlrooms/room-shell';
 
-import { SCENARIO_CONFIG, USE_ARCHIVE_DATA, ARCHIVE_DATA_URL } from '../constants/data';
+import { ARCHIVE_DATA_URL } from '../constants/data';
 import { useMapStore } from '../zustand/useMapStore';
 import { MapView } from './MapView';
 import { ModeSelector } from './ModeSelector';
 import { LayerPanel } from './LayerPanel';
-import { ScenarioSwitcher } from './ScenarioSwitcher';
 import { Timebar } from './timebar/Timebar';
 import { AgentOverviewPanel } from './AgentOverviewPanel';
 import { AgentDetailPanel } from './AgentDetailPanel';
 import { useProfiles } from '@/hooks/useProfiles';
 
 export const MainView: React.FC = () => {
-  const scenarioType = useMapStore(useShallow((s) => s.scenarioType));
   const selectedAgentId = useMapStore(useShallow((s) => s.selectedAgentId));
   // 只在這裡抓一次 profiles.json（~13MB），宏觀/微觀兩個面板共用同一份，不重複 fetch。
   const { profiles, isLoading: profilesLoading } = useProfiles();
-  const dataUrl = USE_ARCHIVE_DATA ? ARCHIVE_DATA_URL : SCENARIO_CONFIG[scenarioType].dataUrl;
-
-  // local_archive/data.parquet 的 paths/timestamps/modes 是逗號分隔的字串欄位（不是原本
-  // sim_data 那種原生 List 型別），ArrowTripsLayer 直接挖 Arrow List 的底層 buffer，
+  // data.parquet 的 paths/timestamps/modes 是逗號分隔的字串欄位（不是原生 List 型別），ArrowTripsLayer 直接挖 Arrow List 的底層 buffer，
   // 所以要先用 string_split + list_transform 轉成型別化陣列（FLOAT[] / UTINYINT[]）。
-  const query = USE_ARCHIVE_DATA
-    ? `
+  const query = `
       SELECT
         id,
         list_transform(string_split(paths, ','), x -> CAST(x AS FLOAT)) AS paths,
         list_transform(string_split(timestamps, ','), x -> CAST(x AS FLOAT)) AS timestamps,
         list_transform(string_split(modes, ','), x -> CAST(x AS UTINYINT)) AS modes
-      FROM read_parquet('${dataUrl}')
-    `
-    : `SELECT paths, timestamps, modes FROM read_parquet('${dataUrl}')`;
+      FROM read_parquet('${ARCHIVE_DATA_URL}')
+    `;
 
   const { data, isLoading, error } = useSql({ query });
 
@@ -52,7 +45,6 @@ export const MainView: React.FC = () => {
             ) : (
               <AgentOverviewPanel arrowTable={arrowTable} profiles={profiles} profilesLoading={profilesLoading} />
             )}
-            <ScenarioSwitcher />
             <ModeSelector />
             <LayerPanel />
           </div>

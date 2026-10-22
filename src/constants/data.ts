@@ -1,4 +1,4 @@
-// 資料來源設定：base URL 從環境變數推導，實際檔名依「情境類型」查表（見 SCENARIO_CONFIG）。
+// 資料來源設定：base URL 從環境變數推導（.env 的 VITE_DUCKDB_CONNECTION_STRING）。
 export const DATA_BASE_URL =
   import.meta.env.VITE_DUCKDB_CONNECTION_STRING || 'http://localhost:7780';
 
@@ -6,37 +6,8 @@ const _baseUrl = DATA_BASE_URL.endsWith('/') ? DATA_BASE_URL : DATA_BASE_URL + '
 
 const urlFor = (path: string) => new URL(path, _baseUrl).href;
 
-// ⚠ 實驗性開關：暫時指向 local_archive/（mentor 提供的 archive.zip，純本地、已 gitignore）
-// 而不是走 SCENARIO_CONFIG 的正式 sim_data 情境資料。之後要接回 sim_data 時把這個改回 false，
-// 或等前端重新設計定案後把整套 SCENARIO_CONFIG 換掉即可，MainView/TimeLine/各 hook 裡的
-// USE_ARCHIVE_DATA 分支到時候一起刪掉。
-export const USE_ARCHIVE_DATA = true;
+// 資料來自 mentor 提供的 archive.zip（純本地、已 gitignore），http-server 直接指向解壓後的資料夾。
 export const ARCHIVE_DATA_URL = urlFor('data.parquet');
 // agent 的人口統計資料（profile）+ 逐筆行程（schedule），目前只有側欄 Dashboard 在用，
 // 不是透過 DuckDB 查，是直接 fetch 整份 JSON（見 hooks/useProfiles.ts）。
 export const ARCHIVE_PROFILES_URL = urlFor('profiles.json');
-
-export type ScenarioType = 'shelter_in_place' | 'mass_evacuation';
-
-export type ScenarioFileSet = {
-  label: string;
-  subScenario: string;
-  dataUrl: string;
-  odDataUrl: string;
-};
-
-// 兩種頂層情境類型各自固定選一個子情境（10）代表；20/40 之後要做成下拉選單可以在這裡擴充成清單。
-export const SCENARIO_CONFIG: Record<ScenarioType, ScenarioFileSet> = {
-  mass_evacuation: {
-    label: '大規模疏散',
-    subScenario: 'pt10',
-    dataUrl: urlFor('05_moi_sim/abm_format_outcome_10000_pt10.parquet'),
-    odDataUrl: urlFor('05_moi_sim/abm_od_arc_outcome_10000_pt10.parquet'),
-  },
-  shelter_in_place: {
-    label: '就地避難',
-    subScenario: 'evac_ratio10',
-    dataUrl: urlFor('05_moi_sim/abm_format_outcome_10000_evac_ratio10.parquet'),
-    odDataUrl: urlFor('05_moi_sim/abm_od_arc_outcome_10000_evac_ratio10.parquet'),
-  },
-};
