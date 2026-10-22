@@ -13,6 +13,7 @@ import { useShallow } from '@sqlrooms/room-shell';
 import { useHeatmapLayer } from '../hooks/useHeatmapLayer';
 import { useODArcLayer } from '../hooks/useODArcLayer';
 import { usePointsLayer, ZOOM_THRESHOLD } from '../hooks/usePointsLayer';
+import { formatDurationTo24Hour } from './timebar/utils';
 
 
 // CARTO 的 dark-matter-gl-style 底層 OSM 資料官方文件寫最慢一年才重建一次（快則 3–6 個月），
@@ -202,7 +203,7 @@ export const MapView: FC<{ arrowTable: arrow.Table }> = ({ arrowTable }) => {
     <div className="relative h-full w-full">
       {/* 為了方便除錯，暫時保留左上角的時鐘/zoom，之後可以拿掉 */}
       <div className="absolute top-5 left-5 z-10 bg-black/80 text-white p-3 rounded font-mono">
-        <div>Time: {Math.floor(time)}</div>
+        <div>Time: {formatDurationTo24Hour(time * 1000)}</div>
         <div>Zoom: {currentZoom.toFixed(2)}</div>
       </div>
 
