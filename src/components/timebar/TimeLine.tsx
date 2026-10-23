@@ -247,11 +247,11 @@ export const TimeLine = () => {
   // 畫面渲染邏輯保持完全一樣
   return (
     <div className="relative flex w-full touch-none select-none items-center" ref={trackRef}>
-      <div className="relative h-10 w-full grow overflow-hidden bg-[#2B2B38] border border-slate-700 rounded-sm">
+      <div className="relative h-10 w-full grow overflow-hidden bg-dash-panel border border-dash-border rounded-sm">
         <div className="absolute inset-0 flex items-end justify-between px-0.5 pb-0">
           <div className="absolute inset-0 flex items-end justify-between px-0.5 pb-0">
             {histogramBars.map((heightRatio, i) => (
-              <div key={`bg-${i}`} className="flex-1 bg-slate-600/50 rounded-t-[1px]" style={{ height: `${Math.max(heightRatio * 100, 5)}%` }} />
+              <div key={`bg-${i}`} className="flex-1 bg-dash-histogram/50 rounded-t-[1px]" style={{ height: `${Math.max(heightRatio * 100, 5)}%` }} />
             ))}
           </div>
           <div 
@@ -259,12 +259,12 @@ export const TimeLine = () => {
             style={{ clipPath: `inset(0 ${100 - (leftPct + widthPct)}% 0 ${leftPct}%)` }}
           >
             {histogramBars.map((heightRatio, i) => (
-              <div key={`fg-${i}`} className="flex-1 rounded-t-[1px] bg-cyan-500" style={{ height: `${Math.max(heightRatio * 100, 5)}%` }} />
+              <div key={`fg-${i}`} className="flex-1 rounded-t-[1px] bg-dash-accent" style={{ height: `${Math.max(heightRatio * 100, 5)}%` }} />
             ))}
           </div>
         </div>
         <div 
-          className="absolute inset-y-0 bg-gray-600/20 border-x border-cyan-500/50 cursor-grab active:cursor-grabbing hover:bg-gray-600/30 transition-colors z-10 backdrop-blur-[0.5px]"
+          className="absolute inset-y-0 bg-dash-window/20 border-x border-dash-accent/50 cursor-grab active:cursor-grabbing hover:bg-dash-window/30 transition-colors z-10 backdrop-blur-[0.5px]"
           style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
           onPointerDown={(e) => handlePointerDown(e, 'range')}
           onPointerMove={handlePointerMove}
@@ -272,28 +272,28 @@ export const TimeLine = () => {
         />
       </div>
       <div
-        className="absolute block h-12 w-2 border border-slate-900 bg-slate-500 cursor-col-resize z-20"
+        className="absolute block h-12 w-2 border border-dash-handle-border bg-dash-handle cursor-col-resize z-20"
         style={{ left: `${leftDisplayPct}%`, transform: 'translateX(-50%)' }}
         onPointerDown={(e) => handlePointerDown(e, 'display-start')}
         onPointerMove={handleDisplayTimeRangeMove}
         onPointerUp={handlePointerUp}
       />
       <div
-        className="absolute block h-12 w-2 border border-slate-900 bg-slate-500 cursor-col-resize z-20"
+        className="absolute block h-12 w-2 border border-dash-handle-border bg-dash-handle cursor-col-resize z-20"
         style={{ left: `${leftDisplayPct + widthDisplayPct}%`, transform: 'translateX(-50%)' }}
         onPointerDown={(e) => handlePointerDown(e, 'display-end')}
         onPointerMove={handleDisplayTimeRangeMove}
         onPointerUp={handlePointerUp}
       />
       <div
-        className="absolute block h-12 w-2 border border-slate-900 bg-white shadow-sm hover:scale-110 cursor-col-resize z-20 transition-transform"
+        className="absolute block h-12 w-2 border border-dash-handle-border bg-dash-handle-active shadow-sm hover:scale-110 cursor-col-resize z-20 transition-transform"
         style={{ left: `${leftPct}%`, transform: 'translateX(-50%)' }}
         onPointerDown={(e) => handlePointerDown(e, 'start')}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       />
       <div
-        className="absolute block h-12 w-2 border border-slate-900 bg-white shadow-sm hover:scale-110 cursor-col-resize z-20 transition-transform"
+        className="absolute block h-12 w-2 border border-dash-handle-border bg-dash-handle-active shadow-sm hover:scale-110 cursor-col-resize z-20 transition-transform"
         style={{ left: `${leftPct + widthPct}%`, transform: 'translateX(-50%)' }}
         onPointerDown={(e) => handlePointerDown(e, 'end')}
         onPointerMove={handlePointerMove}

@@ -46,7 +46,7 @@ export const Timebar = () => {
   return (
     // 🌟 3. 調整 shadcn Card 樣式，加入半透明黑與邊框，融入 Deck.gl 深色地圖
     // padding/margin 縮小一點，讓 Timebar 整體矮一些——小螢幕時比較不容易蓋到右上角面板
-    <Card className="p-3 mt-2 select-none w-full bg-[#2B2B38]/90 border-slate-700 shadow-xl backdrop-blur-md">
+    <Card className="p-3 mt-2 select-none w-full bg-dash-panel/90 border-dash-border shadow-xl backdrop-blur-md">
       <div className="flex items-center gap-4 mb-2">
 
         {/* 🌟 4. 使用 shadcn Button */}
@@ -64,10 +64,10 @@ export const Timebar = () => {
         </Button>
         
         <div className="flex flex-col">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-dash-text-muted uppercase tracking-wider">
             Timeline
           </span>
-          <div className="text-sm font-mono font-medium text-white">
+          <div className="text-sm font-mono font-medium text-dash-text-strong">
             {formatDurationTo24Hour(timeRange[0]*1000)} - {formatDurationTo24Hour(timeRange[1]*1000)}
           </div>
         </div>
@@ -82,7 +82,7 @@ export const Timebar = () => {
       <TimeLine />
 
       {/* Labels below slider */}
-      <div className="flex justify-between text-[13px] text-slate-500 font-mono mt-2">
+      <div className="flex justify-between text-[13px] text-dash-text-faint font-mono mt-2">
         <span>{formatDurationTo24Hour(viewTimeRange[0]*1000)}</span>
         <span>{formatDurationTo24Hour(viewTimeRange[1]*1000)}</span>
       </div>

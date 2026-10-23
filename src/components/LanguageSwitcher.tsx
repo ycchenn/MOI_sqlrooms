@@ -16,7 +16,7 @@ export const LanguageSwitcher = () => {
   const t = useT();
 
   return (
-    <div role="group" aria-label={t('lang.switch')} className="inline-flex self-start rounded-md border border-slate-700 bg-slate-800/60 p-0.5 font-mono text-xs">
+    <div role="group" aria-label={t('lang.switch')} className="inline-flex self-start rounded-md border border-dash-border bg-dash-surface/60 p-0.5 font-mono text-xs">
       {OPTIONS.map(({ lang, label }) => {
         const active = language === lang;
         return (
@@ -25,7 +25,7 @@ export const LanguageSwitcher = () => {
             aria-pressed={active}
             onClick={() => setLanguage(lang)}
             className={`px-2.5 py-1 rounded transition-colors ${
-              active ? 'bg-cyan-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'
+              active ? 'bg-dash-accent text-dash-on-accent font-bold' : 'text-dash-text-muted hover:text-dash-text'
             }`}
           >
             {label}

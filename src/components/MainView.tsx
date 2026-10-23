@@ -33,12 +33,12 @@ export const MainView: React.FC = () => {
   const arrowTable = data?.arrowTable;
 
   return (
-    <div className="relative flex h-full w-full overflow-hidden bg-[#1e1e24]">
+    <div className="relative flex h-full w-full overflow-hidden bg-dash-app">
       {arrowTable && !isLoading ? (
         <>
           {/* 左側 Dashboard 側欄：固定寬度，跟地圖並排（不是疊在地圖上），
               情境切換／運具選擇／圖層控制都先搬進來，之後 profile/schedule 也會加在這裡。 */}
-          <div className="w-[340px] shrink-0 h-full bg-[#2B2B38] border-r border-slate-700 overflow-y-auto scrollbar-subtle p-4 flex flex-col gap-3 z-10">
+          <div className="w-[340px] shrink-0 h-full bg-dash-panel border-r border-dash-border overflow-y-auto scrollbar-subtle p-4 flex flex-col gap-3 z-10">
             {/* 中英切換：固定在側欄左上，總覽/agent 行程兩種畫面都看得到 */}
             <LanguageSwitcher />
             {/* 點了地圖上某個 agent 就切換成他的 profile+schedule（微觀），
@@ -75,7 +75,7 @@ export const MainView: React.FC = () => {
 
       {/* 錯誤提示 */}
       {error && (
-        <div className="absolute left-5 top-5 bg-red-500/90 text-white p-4 font-mono z-50 rounded shadow-lg backdrop-blur">
+        <div className="absolute left-5 top-5 bg-red-500/90 text-dash-text-strong p-4 font-mono z-50 rounded shadow-lg backdrop-blur">
           {String(error)}
         </div>
       )}

@@ -145,14 +145,54 @@
     @apply font-sans;
   }
 }
+/* ============================================================
+   Dashboard / 時間軸配色（集中管理）
+   要試配色就改這裡，存檔後 yarn dev 的畫面會自動更新。
+   色碼可以直接換成任何 #hex；元件裡用 bg-dash-panel、text-dash-accent 這類 class 引用，
+   後面的 /90、/50 是不透明度，會套在這裡的顏色上。
+   不含：地圖上的運具顏色（constants/map.ts 的 AGENT_MODE_TRIP_COLORS，地圖和甜甜圈共用）、
+   錯誤提示的紅色。
+   ============================================================ */
+@theme static {
+  /* 底色 */
+  --color-dash-app: #1e1e24;          /* 整個畫面最底層、倍速選擇器底色 */
+  --color-dash-panel: #2b2b38;        /* 側欄、各卡片、時間軸底色 */
+  --color-dash-surface: #1d293d;      /* 卡片裡的小區塊（數字方塊、行程項目） */
+  --color-dash-track: #314158;        /* 進度條底、hover 底色 */
+  --color-dash-border: #314158;       /* 邊框、分隔線 */
+
+  /* 文字（由亮到暗） */
+  --color-dash-text-strong: #ffffff;  /* 標題、重要數字、勾選中的項目 */
+  --color-dash-text: #e2e8f0;         /* 一般內文 */
+  --color-dash-text-soft: #cad5e2;    /* 次要內文 */
+  --color-dash-text-muted: #90a1b9;   /* 小標題、說明文字、捲軸 */
+  --color-dash-text-faint: #62748e;   /* 最淡的提示文字、未勾選項目 */
+
+  /* 強調色（目前是青色） */
+  --color-dash-accent: #00b8db;        /* 按鈕底色、進度條、選取框 */
+  --color-dash-accent-bright: #00d3f3; /* 大數字、連結文字、按鈕 hover */
+  --color-dash-accent-soft: #53eafd;   /* 反白中的行程文字、連結 hover */
+  --color-dash-on-accent: #0f172b;     /* 強調色按鈕上的文字 */
+
+  /* 時間軸專用 */
+  --color-dash-histogram: #45556c;     /* 直方圖長條 */
+  --color-dash-window: #4a5565;        /* 播放區間的半透明遮罩 */
+  --color-dash-handle: #62748e;        /* 顯示範圍的外側把手 */
+  --color-dash-handle-active: #ffffff; /* 播放區間的內側把手 */
+  --color-dash-handle-border: #0f172b; /* 把手外框 */
+
+  /* 甜甜圈沒有資料時的灰色圓環 */
+  --color-dash-empty: #45556c;
+}
+
 /* 側欄用的低調捲軸：細、無軌道底色，平常只有淡淡一條，滑鼠移上去才稍微明顯。
    Chrome/Edge/Firefox 吃標準的 scrollbar-width/color，Safari 吃下面的 ::-webkit-scrollbar。 */
 .scrollbar-subtle {
   scrollbar-width: thin;
-  scrollbar-color: rgb(148 163 184 / 0.2) transparent;
+  scrollbar-color: color-mix(in srgb, var(--color-dash-text-muted) 20%, transparent) transparent;
 }
 .scrollbar-subtle:hover {
-  scrollbar-color: rgb(148 163 184 / 0.45) transparent;
+  scrollbar-color: color-mix(in srgb, var(--color-dash-text-muted) 45%, transparent) transparent;
 }
 .scrollbar-subtle::-webkit-scrollbar {
   width: 6px;
@@ -161,9 +201,9 @@
   background: transparent;
 }
 .scrollbar-subtle::-webkit-scrollbar-thumb {
-  background: rgb(148 163 184 / 0.2);
+  background: color-mix(in srgb, var(--color-dash-text-muted) 20%, transparent);
   border-radius: 9999px;
 }
 .scrollbar-subtle:hover::-webkit-scrollbar-thumb {
-  background: rgb(148 163 184 / 0.45);
+  background: color-mix(in srgb, var(--color-dash-text-muted) 45%, transparent);
 }

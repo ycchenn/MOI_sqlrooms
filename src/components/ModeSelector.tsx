@@ -16,7 +16,7 @@ const CENTER = SIZE / 2;
 const OUTER_R = 62;
 const INNER_R = 42;
 const HOVER_GROW = 4; // hover 的那一塊往外凸幾 px
-const SURFACE = '#2B2B38'; // 側欄底色，當作每塊之間 2px 間隔的描邊色
+const SURFACE = 'var(--color-dash-panel)'; // 卡片底色（index.css），當作每塊之間 2px 間隔的描邊色
 
 // 每塊的顏色跟地圖上軌跡/點位同一份顏色表（AGENT_MODE_TRIP_COLORS），用 log2(bit) 對照
 const MODES = ORDERED_MOBILITY_MODES.map((name) => {
@@ -79,11 +79,11 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
   };
 
   return (
-    <div className="bg-[#2B2B38]/90 border border-slate-700 p-4 rounded-lg text-white flex flex-col gap-3 font-mono shadow-xl backdrop-blur-sm">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('modes.title')}</span>
+    <div className="bg-dash-panel/90 border border-dash-border p-4 rounded-lg text-dash-text-strong flex flex-col gap-3 font-mono shadow-xl backdrop-blur-sm">
+      <div className="flex items-center justify-between border-b border-dash-border pb-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-dash-text-muted">{t('modes.title')}</span>
         {!allSelected && (
-          <button onClick={selectAll} className="text-xs text-cyan-400 hover:text-cyan-300">
+          <button onClick={selectAll} className="text-xs text-dash-accent-bright hover:text-dash-accent-soft">
             {t('modes.showAll')}
           </button>
         )}
@@ -92,7 +92,7 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
       <div className="flex items-center gap-3">
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="shrink-0 overflow-visible">
           {total === 0 ? (
-            <path d={arcPath(0, Math.PI * 2, OUTER_R, INNER_R)} fill="#475569" opacity={0.4} />
+            <path d={arcPath(0, Math.PI * 2, OUTER_R, INNER_R)} fill="var(--color-dash-empty)" opacity={0.4} />
           ) : (
             slices
               .filter((s) => s.count > 0)
@@ -123,10 +123,10 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
               })
           )}
           {/* 中心：hover 某塊時顯示該運具，否則顯示目前移動中的總人數 */}
-          <text x={CENTER} y={CENTER - 4} textAnchor="middle" className="fill-white text-[18px] font-bold">
+          <text x={CENTER} y={CENTER - 4} textAnchor="middle" className="fill-dash-text-strong text-[18px] font-bold">
             {(hovered ? hovered.count : total).toLocaleString()}
           </text>
-          <text x={CENTER} y={CENTER + 14} textAnchor="middle" className="fill-slate-400 text-[11px]">
+          <text x={CENTER} y={CENTER + 14} textAnchor="middle" className="fill-dash-text-muted text-[11px]">
             {hovered ? `${hovered.label} ${formatPct(hovered.count, total)}` : t('modes.moving')}
           </text>
         </svg>
@@ -143,7 +143,7 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
                 onClick={() => toggleMode(s.bit)}
                 onMouseEnter={() => setHoveredBit(s.bit)}
                 onMouseLeave={() => setHoveredBit(null)}
-                className={`flex items-center gap-2 rounded px-1 py-0.5 text-xs text-left hover:bg-slate-700/50 transition-opacity ${
+                className={`flex items-center gap-2 rounded px-1 py-0.5 text-xs text-left hover:bg-dash-track/50 transition-opacity ${
                   isSelected ? 'opacity-100' : 'opacity-40'
                 }`}
               >
@@ -151,8 +151,8 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
                   className="w-2.5 h-2.5 rounded-full shrink-0 border-2"
                   style={{ borderColor: s.color, backgroundColor: isSelected ? s.color : 'transparent' }}
                 />
-                <span className="text-slate-200 flex-1 whitespace-nowrap">{s.label}</span>
-                <span className="text-slate-200 tabular-nums shrink-0">{formatPct(s.count, total)}</span>
+                <span className="text-dash-text flex-1 whitespace-nowrap">{s.label}</span>
+                <span className="text-dash-text tabular-nums shrink-0">{formatPct(s.count, total)}</span>
               </button>
             );
           })}
