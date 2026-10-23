@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import { INITIAL_SELETED_MOBILITY_MODES_BITS } from '../constants/map';
 import { INITIAL_VISIBLE_LAYERS, type LayerId } from '../constants/layers';
+import type { Lang } from '../i18n';
+
+// 介面語言記在瀏覽器裡，下次打開沿用；無痕模式/封鎖儲存時讀寫會丟例外，一律退回中文。
+const LANG_STORAGE_KEY = 'moi-sqlrooms.lang';
+const loadLanguage = (): Lang => {
+  try {
+    return localStorage.getItem(LANG_STORAGE_KEY) === 'en' ? 'en' : 'zh';
+  } catch {
+    return 'zh';
+  }
+};
 /**
 變數名稱,     代表意義,             範例 (秒),        視覺表現
 ViewRange,   數據的絕對邊界,        "[0, 86400]",    整個時間軸的總長度
@@ -19,6 +30,7 @@ interface MapState {
   visibleLayers: Record<LayerId, boolean>;
   // 地圖上點擊選中的 agent（Dashboard 側欄用來切換宏觀總覽／微觀個人視圖）；null = 沒有選取。
   selectedAgentId: number | null;
+  language: Lang;
 
   setTime: (t: number) => void;
   setTimeRange: (range: [number, number]) => void;
@@ -30,6 +42,7 @@ interface MapState {
   setViewTimeRange: (range: [number, number]) => void;
   toggleLayer: (id: LayerId) => void;
   setSelectedAgentId: (id: number | null) => void;
+  setLanguage: (lang: Lang) => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
@@ -42,6 +55,7 @@ export const useMapStore = create<MapState>((set) => ({
   selectedModes: INITIAL_SELETED_MOBILITY_MODES_BITS,
   visibleLayers: INITIAL_VISIBLE_LAYERS,
   selectedAgentId: null,
+  language: loadLanguage(),
 
   setTime: (t) => set({ time: t }),
   setTimeRange: (range) => set({ timeRange: range }),
@@ -62,4 +76,12 @@ export const useMapStore = create<MapState>((set) => ({
     visibleLayers: { ...state.visibleLayers, [id]: !state.visibleLayers[id] },
   })),
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
+  setLanguage: (lang) => {
+    try {
+      localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+      // 存不進去就只在這次瀏覽有效
+    }
+    set({ language: lang });
+  },
 }));

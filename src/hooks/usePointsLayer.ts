@@ -21,7 +21,8 @@ export type PointMeta = {
   mode: number;
   speedKmh: number;
   segDurationSec: number;
-  statusLabel: string;
+  // 時速過低時的狀態代碼，顯示文字在 i18n 的 tooltip.status.*；'' 表示正常
+  status: '' | 'stopped' | 'slow';
   id: number | undefined; // 點擊選取用：這個 instance 對應哪個 agent（row.id，archive 模式才有）
 };
 
@@ -68,7 +69,7 @@ export const usePointsLayer = (
           mode: 0,
           speedKmh: 0,
           segDurationSec: 0,
-          statusLabel: '',
+          status: '' as PointMeta['status'],
           id: a.id,
         })),
         numInstances: agents.length,
@@ -127,17 +128,17 @@ export const usePointsLayer = (
       const segDistMeters = Math.hypot(p2x - p1x, p2y - p1y) * DEG_TO_METERS;
       const speedKmh = segDurationSec > 0 ? (segDistMeters / segDurationSec) * 3.6 : 0;
 
-      let statusLabel = '';
+      let status: PointMeta['status'] = '';
       if (segDurationSec > 0) {
-        if (speedKmh < 1) statusLabel = '幾乎靜止（塞車/等待中）';
-        else if (speedKmh < 5) statusLabel = '緩慢移動';
+        if (speedKmh < 1) status = 'stopped';
+        else if (speedKmh < 5) status = 'slow';
       }
 
       m.visible = true;
       m.mode = currentMode;
       m.speedKmh = speedKmh;
       m.segDurationSec = segDurationSec;
-      m.statusLabel = statusLabel;
+      m.status = status;
     }
 
     return {

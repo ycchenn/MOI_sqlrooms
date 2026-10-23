@@ -4,7 +4,8 @@ import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Map, NavigationControl, useControl } from 'react-map-gl/maplibre';
 import type * as arrow from 'apache-arrow';
 
-import { AGENT_MODE_TRIP_COLORS, INITIAL_VIEW_STATE, MAP_MIN_ZOOM, MAP_MAX_ZOOM, MODE_BIT_LABELS } from '../constants/map';
+import { AGENT_MODE_TRIP_COLORS, INITIAL_VIEW_STATE, MAP_MIN_ZOOM, MAP_MAX_ZOOM } from '../constants/map';
+import { modeKey, useT } from '../i18n';
 import { LAYER_IDS } from '../constants/layers';
 import { ArrowTripsLayer } from './custom_layer/arrowTripsLayer/ArrowTripsLayer';
 import { ArrowLoader, ArrowWorkerLoader } from '@loaders.gl/arrow';
@@ -82,6 +83,7 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
   const odArcLayer = useODArcLayer();
   const { layers: pointsLayers, meta: pointsMeta } = usePointsLayer(arrowTable, currentZoom);
   const pointsMetaRef = useRef(pointsMeta);
+  const t = useT();
   pointsMetaRef.current = pointsMeta;
 
   // Points 圖層用 binary attributes，沒有 per-instance 物件可供 picking（obj 一定是
@@ -91,12 +93,13 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
     if (info.layer?.id !== 'trips-point') return null;
     const m = pointsMetaRef.current[info.index];
     if (!m || !m.visible) return null;
-    const modeLabel = MODE_BIT_LABELS[m.mode] ?? '未知';
-    const speedText = m.segDurationSec > 0 ? `${m.speedKmh.toFixed(1)} km/h` : '—';
+    const modeLabel = t(modeKey(m.mode) ?? 'mode.unknown');
+    const speedText = m.segDurationSec > 0 ? `${m.speedKmh.toFixed(1)} ${t('unit.kmh')}` : '—';
+    const statusText = m.status ? t('tooltip.statusWrap', { status: t(`tooltip.status.${m.status}`) }) : '';
     const lines = [
-      `路徑編號: ${info.index}`,
-      `運具: ${modeLabel}`,
-      `目前路段時速: ${speedText}${m.statusLabel ? `（${m.statusLabel}）` : ''}`,
+      `${t('tooltip.pathId')}: ${info.index}`,
+      `${t('tooltip.mode')}: ${modeLabel}`,
+      `${t('tooltip.speed')}: ${speedText}${statusText}`,
     ].map(escapeHtml);
 
     // 原本在 dashboard 的 Profile 移到這裡：滑過去就看得到這個人的基本資料，
@@ -105,10 +108,10 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
     const profileHtml = profile
       ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid #475569">` +
         [
-          `年齡: ${escapeHtml(profile.age)}&nbsp;&nbsp;教育: ${escapeHtml(profile.education)}`,
-          `職業: ${escapeHtml(profile.occupation)}`,
-          `收入: ${escapeHtml(profile.income)}`,
-          profile.mobility?.length ? `可用運具: ${escapeHtml(profile.mobility.join(', '))}` : '',
+          `${escapeHtml(t('tooltip.age'))}: ${escapeHtml(profile.age)}&nbsp;&nbsp;${escapeHtml(t('tooltip.education'))}: ${escapeHtml(profile.education)}`,
+          `${escapeHtml(t('tooltip.occupation'))}: ${escapeHtml(profile.occupation)}`,
+          `${escapeHtml(t('tooltip.income'))}: ${escapeHtml(profile.income)}`,
+          profile.mobility?.length ? `${escapeHtml(t('tooltip.mobility'))}: ${escapeHtml(profile.mobility.join(', '))}` : '',
         ].filter(Boolean).join('<br/>') +
         `</div>`
       : '';
@@ -117,7 +120,7 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
       html: lines.join('<br/>') + profileHtml,
       style: { fontSize: '12px', lineHeight: '1.5', maxWidth: '280px' },
     };
-  }, [profiles]);
+  }, [profiles, t]);
 
 
   // 點擊選取 agent：縮小地圖時點軌跡（trips-layer，object 是完整 Arrow row，直接有 .id），

@@ -4,10 +4,10 @@ import { useShallow } from '@sqlrooms/room-shell';
 
 import { useMapStore } from '@/zustand/useMapStore';
 import { useModeShares } from '@/hooks/useModeShares';
+import { modeKey, useT } from '@/i18n';
 import {
   AGENT_MODE_TRIP_COLORS,
   MOBILITY_MODE_BITS,
-  MODE_BIT_LABELS,
   ORDERED_MOBILITY_MODES,
 } from '../constants/map';
 
@@ -22,7 +22,7 @@ const SURFACE = '#2B2B38'; // 側欄底色，當作每塊之間 2px 間隔的描
 const MODES = ORDERED_MOBILITY_MODES.map((name) => {
   const bit = MOBILITY_MODE_BITS[name];
   const [r, g, b] = AGENT_MODE_TRIP_COLORS[Math.floor(Math.log2(bit))] ?? [255, 255, 255];
-  return { name, bit, label: MODE_BIT_LABELS[bit], color: `rgb(${r}, ${g}, ${b})` };
+  return { name, bit, color: `rgb(${r}, ${g}, ${b})` };
 });
 
 // 角度從 12 點鐘方向開始、順時針
@@ -55,6 +55,7 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
     useShallow((s) => ({ selectedModes: s.selectedModes, toggleMode: s.toggleMode })),
   );
   const { counts, total } = useModeShares(arrowTable);
+  const t = useT();
   const [hoveredBit, setHoveredBit] = useState<number | null>(null);
 
   const allSelected = MODES.every((m) => selectedModes.includes(m.bit));
@@ -65,7 +66,7 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
     const count = counts[m.bit] ?? 0;
     const start = cursor;
     cursor += total ? (count / total) * Math.PI * 2 : 0;
-    return { ...m, count, start, end: cursor };
+    return { ...m, label: t(modeKey(m.bit) ?? 'mode.unknown'), count, start, end: cursor };
   });
 
   const hovered = slices.find((s) => s.bit === hoveredBit);
@@ -80,10 +81,10 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
   return (
     <div className="bg-[#2B2B38]/90 border border-slate-700 p-4 rounded-lg text-white flex flex-col gap-3 font-mono shadow-xl backdrop-blur-sm">
       <div className="flex items-center justify-between border-b border-slate-700 pb-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Mobility Modes</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{t('modes.title')}</span>
         {!allSelected && (
           <button onClick={selectAll} className="text-xs text-cyan-400 hover:text-cyan-300">
-            全部顯示
+            {t('modes.showAll')}
           </button>
         )}
       </div>
@@ -110,7 +111,7 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
                     role="button"
                     tabIndex={0}
                     aria-pressed={isSelected}
-                    aria-label={`${s.label} ${s.count} 人，${formatPct(s.count, total)}`}
+                    aria-label={t('modes.ariaSlice', { label: s.label, count: s.count, pct: formatPct(s.count, total) })}
                     onClick={() => toggleMode(s.bit)}
                     onKeyDown={onKey(s.bit)}
                     onMouseEnter={() => setHoveredBit(s.bit)}
@@ -126,7 +127,7 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
             {(hovered ? hovered.count : total).toLocaleString()}
           </text>
           <text x={CENTER} y={CENTER + 14} textAnchor="middle" className="fill-slate-400 text-[11px]">
-            {hovered ? `${hovered.label} ${formatPct(hovered.count, total)}` : '移動中'}
+            {hovered ? `${hovered.label} ${formatPct(hovered.count, total)}` : t('modes.moving')}
           </text>
         </svg>
 
@@ -150,8 +151,7 @@ export const ModeSelector = ({ arrowTable }: { arrowTable: arrow.Table }) => {
                   className="w-2.5 h-2.5 rounded-full shrink-0 border-2"
                   style={{ borderColor: s.color, backgroundColor: isSelected ? s.color : 'transparent' }}
                 />
-                <span className="uppercase text-slate-200 w-11 shrink-0">{s.name}</span>
-                <span className="text-slate-400 flex-1 whitespace-nowrap">{s.label}</span>
+                <span className="text-slate-200 flex-1 whitespace-nowrap">{s.label}</span>
                 <span className="text-slate-200 tabular-nums shrink-0">{formatPct(s.count, total)}</span>
               </button>
             );

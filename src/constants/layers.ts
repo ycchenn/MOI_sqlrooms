@@ -11,15 +11,15 @@ export type LayerId = (typeof LAYER_IDS)[keyof typeof LAYER_IDS];
 
 export type LayerConfig = {
   id: LayerId;
-  title: string;
+  // 面板上的顯示名稱在 i18n 的 layer.<id> 裡
   defaultVisible: boolean;
 };
 
 export const LAYER_CONFIG: readonly LayerConfig[] = [
   // Trips 同時控制 zoom 放大後的位置點（usePointsLayer），兩者依 zoom 自動切換，不分開勾選
-  { id: LAYER_IDS.TRIPS, title: 'Trips · 移動軌跡', defaultVisible: true },
-  { id: LAYER_IDS.HEATMAP, title: 'Heatmap · 路徑密度', defaultVisible: false },
-  { id: LAYER_IDS.OD_ARC, title: 'OD Arc · 起迄弧線', defaultVisible: false },
+  { id: LAYER_IDS.TRIPS, defaultVisible: true },
+  { id: LAYER_IDS.HEATMAP, defaultVisible: false },
+  { id: LAYER_IDS.OD_ARC, defaultVisible: false },
 ];
 
 export const INITIAL_VISIBLE_LAYERS: Record<LayerId, boolean> = LAYER_CONFIG.reduce(

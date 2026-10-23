@@ -7,6 +7,7 @@ import { useMapStore } from '../zustand/useMapStore';
 import { MapView } from './MapView';
 import { ModeSelector } from './ModeSelector';
 import { LayerPanel } from './LayerPanel';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { Timebar } from './timebar/Timebar';
 import { AgentOverviewPanel } from './AgentOverviewPanel';
 import { AgentDetailPanel } from './AgentDetailPanel';
@@ -38,6 +39,8 @@ export const MainView: React.FC = () => {
           {/* 左側 Dashboard 側欄：固定寬度，跟地圖並排（不是疊在地圖上），
               情境切換／運具選擇／圖層控制都先搬進來，之後 profile/schedule 也會加在這裡。 */}
           <div className="w-[340px] shrink-0 h-full bg-[#2B2B38] border-r border-slate-700 overflow-y-auto scrollbar-subtle p-4 flex flex-col gap-3 z-10">
+            {/* 中英切換：固定在側欄左上，總覽/agent 行程兩種畫面都看得到 */}
+            <LanguageSwitcher />
             {/* 點了地圖上某個 agent 就切換成他的 profile+schedule（微觀），
                 沒選取時顯示全體統計（宏觀）——兩者共用同一個 selectedAgentId 開關。 */}
             {selectedAgentId !== null ? (
