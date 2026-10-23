@@ -155,34 +155,34 @@
    ============================================================ */
 @theme static {
   /* 底色 */
-  --color-dash-app: #1e1e24;          /* 整個畫面最底層、倍速選擇器底色 */
-  --color-dash-panel: #2b2b38;        /* 側欄、各卡片、時間軸底色 */
-  --color-dash-surface: #1d293d;      /* 卡片裡的小區塊（數字方塊、行程項目） */
-  --color-dash-track: #314158;        /* 進度條底、hover 底色 */
-  --color-dash-border: #314158;       /* 邊框、分隔線 */
+  --color-dash-app: #0f0f10;          /* 整個畫面最底層、倍速選擇器底色 */
+  --color-dash-panel: #18181b;        /* 側欄、各卡片、時間軸底色 */
+  --color-dash-surface: #232327;      /* 卡片裡的小區塊（數字方塊、行程項目） */
+  --color-dash-track: #2f2f35;        /* 進度條底、hover 底色 */
+  --color-dash-border: #2a2a30;       /* 邊框、分隔線 */
 
   /* 文字（由亮到暗） */
-  --color-dash-text-strong: #ffffff;  /* 標題、重要數字、勾選中的項目 */
-  --color-dash-text: #e2e8f0;         /* 一般內文 */
-  --color-dash-text-soft: #cad5e2;    /* 次要內文 */
-  --color-dash-text-muted: #90a1b9;   /* 小標題、說明文字、捲軸 */
-  --color-dash-text-faint: #62748e;   /* 最淡的提示文字、未勾選項目 */
+  --color-dash-text-strong: #fafafa;  /* 標題、重要數字、勾選中的項目 */
+  --color-dash-text: #e4e4e7;         /* 一般內文 */
+  --color-dash-text-soft: #c4c4cc;    /* 次要內文 */
+  --color-dash-text-muted: #9696a0;   /* 小標題、說明文字、捲軸 */
+  --color-dash-text-faint: #73737d;   /* 最淡的提示文字、未勾選項目 */
 
-  /* 強調色（目前是青色） */
-  --color-dash-accent: #00b8db;        /* 按鈕底色、進度條、選取框 */
-  --color-dash-accent-bright: #00d3f3; /* 大數字、連結文字、按鈕 hover */
-  --color-dash-accent-soft: #53eafd;   /* 反白中的行程文字、連結 hover */
-  --color-dash-on-accent: #0f172b;     /* 強調色按鈕上的文字 */
+  /* 強調色（石墨極簡：用淺灰白當強調色，畫面上的彩色只留給運具） */
+  --color-dash-accent: #e4e4e7;        /* 按鈕底色、進度條、選取框 */
+  --color-dash-accent-bright: #fafafa; /* 大數字、連結文字、按鈕 hover */
+  --color-dash-accent-soft: #ffffff;   /* 反白中的行程文字、連結 hover */
+  --color-dash-on-accent: #18181b;     /* 強調色按鈕上的文字 */
 
   /* 時間軸專用 */
-  --color-dash-histogram: #45556c;     /* 直方圖長條 */
-  --color-dash-window: #4a5565;        /* 播放區間的半透明遮罩 */
-  --color-dash-handle: #62748e;        /* 顯示範圍的外側把手 */
-  --color-dash-handle-active: #ffffff; /* 播放區間的內側把手 */
-  --color-dash-handle-border: #0f172b; /* 把手外框 */
+  --color-dash-histogram: #3f3f46;     /* 直方圖長條 */
+  --color-dash-window: #a1a1aa;        /* 播放區間的半透明遮罩 */
+  --color-dash-handle: #71717a;        /* 顯示範圍的外側把手 */
+  --color-dash-handle-active: #fafafa; /* 播放區間的內側把手 */
+  --color-dash-handle-border: #0f0f10; /* 把手外框 */
 
   /* 甜甜圈沒有資料時的灰色圓環 */
-  --color-dash-empty: #45556c;
+  --color-dash-empty: #2f2f35;
 }
 
 /* 側欄用的低調捲軸：細、無軌道底色，平常只有淡淡一條，滑鼠移上去才稍微明顯。
