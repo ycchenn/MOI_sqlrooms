@@ -82,7 +82,7 @@ npx http-server sim_data/20260910 -p 7780 --cors
    `.gitignore` 只保證排除 `local_archive/` 這個名字）
 3. 啟動一個支援 Range Requests + CORS 的靜態伺服器指到那個資料夾：
    ```bash
-   npx http-server local_archive -p 7780 --cors
+   npx http-server "C:\Users\leejy\Downloads\Archive" -p 7780 --cors
 
 ### 4. 啟動服務
 本系統需要同時啟動資料伺服器（上一步）與前端開發環境（建議開兩個終端機視窗）：
