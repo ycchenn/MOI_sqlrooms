@@ -54,7 +54,9 @@ export const useHeatmapLayer = (arrowTable: arrow.Table | undefined, debouncedTi
         widthMinPixels: 2,
 
         // GPU 過濾:時間範圍 + 單一 mode
-        debouncedTimeRange,
+        // ⚠ ArrowPathLayer 讀的 prop 名稱是 timeRange；之前寫成 debouncedTimeRange 沒對上，
+        // 圖層一直用預設值 [11000, 12000]（03:03–03:20），不管時間軸拉到哪都只畫半夜那段。
+        timeRange: debouncedTimeRange,
         filterCategories: [modeBitmask],
 
         parameters: {
