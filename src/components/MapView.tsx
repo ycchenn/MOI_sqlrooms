@@ -80,7 +80,7 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
 
   // 同份 arrowTable 給 heatmap / points;未來若資料來源分流,改在 hook 內 useSql。
   const heatmapLayers = useHeatmapLayer(arrowTable, debouncedTimeRange);
-  const odArcLayer = useODArcLayer();
+  const odArcLayer = useODArcLayer(arrowTable, profiles);
   const { layers: pointsLayers, meta: pointsMeta } = usePointsLayer(arrowTable, currentZoom);
   const pointsMetaRef = useRef(pointsMeta);
   const t = useT();

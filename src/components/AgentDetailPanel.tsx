@@ -4,21 +4,12 @@ import { useShallow } from '@sqlrooms/room-shell';
 import { useMapStore } from '@/zustand/useMapStore';
 import type { ProfilesData } from '@/hooks/useProfiles';
 import { locationKey, useT } from '@/i18n';
+import { DAY_SECONDS, parseHHMM } from '@/lib/schedule';
 
 type AgentDetailPanelProps = {
   agentId: number;
   profiles: ProfilesData | null;
 };
-
-// "HH:MM" → 當天秒數。schedule 的時間是一天制（00:00–24:00），跟模擬可能跨日的
-// 全域 time（見 setSelectedAgentId 旁註）不是同一個軸，比對前要對齊成「當天時刻」。
-const parseHHMM = (s: string): number => {
-  const [h, m] = s.split(':').map(Number);
-  return (h || 0) * 3600 + (m || 0) * 60;
-};
-
-const DAY_SECONDS = 86400;
-
 
 export const AgentDetailPanel: React.FC<AgentDetailPanelProps> = ({ agentId, profiles }) => {
   const { time, setSelectedAgentId } = useMapStore(
