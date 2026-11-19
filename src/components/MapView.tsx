@@ -12,7 +12,6 @@ import { ArrowLoader, ArrowWorkerLoader } from '@loaders.gl/arrow';
 import { useMapStore } from '../zustand/useMapStore';
 import { useShallow } from '@sqlrooms/room-shell';
 import { useHeatmapLayer } from '../hooks/useHeatmapLayer';
-import { useODArcLayer } from '../hooks/useODArcLayer';
 import { usePointsLayer, ZOOM_THRESHOLD } from '../hooks/usePointsLayer';
 import { formatDurationTo24Hour } from './timebar/utils';
 import type { ProfilesData } from '../hooks/useProfiles';
@@ -80,7 +79,6 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
 
   // 同份 arrowTable 給 heatmap / points;未來若資料來源分流,改在 hook 內 useSql。
   const heatmapLayers = useHeatmapLayer(arrowTable, debouncedTimeRange);
-  const odArcLayer = useODArcLayer(arrowTable, profiles);
   const { layers: pointsLayers, meta: pointsMeta } = usePointsLayer(arrowTable, currentZoom);
   const pointsMetaRef = useRef(pointsMeta);
   const t = useT();
@@ -125,7 +123,7 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
 
   // 點擊選取 agent：縮小地圖時點軌跡（trips-layer，object 是完整 Arrow row，直接有 .id），
   // 放大地圖時點位置點（trips-point，走 binary attributes 沒有 object，用 info.index 查
-  // usePointsLayer 算好的 meta.id）。點到其他圖層（Heatmap/OD Arc）不影響選取，
+  // usePointsLayer 算好的 meta.id）。點到其他圖層（Heatmap）不影響選取，
   // 只有「點到空白地圖本身」才會取消選取。
   const handleMapClick = useCallback((info: any) => {
     if (info.layer?.id === 'trips-layer') {
@@ -194,9 +192,8 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
     return selectedModes.reduce((acc, modeBit) => acc | modeBit, 0);
   }, [selectedModes]);
 
-  // 順序:heatmap → od-arc → points → trips（後 push 的畫在上面）
+  // 順序:heatmap → points → trips（後 push 的畫在上面）
   layers.push(...heatmapLayers);
-  if (odArcLayer) layers.push(odArcLayer);
   layers.push(...pointsLayers);
 
   if (arrowTable && tripsVisible && currentZoom <= ZOOM_THRESHOLD) {

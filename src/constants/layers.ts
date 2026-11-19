@@ -4,7 +4,6 @@
 export const LAYER_IDS = {
   TRIPS: 'trips',
   HEATMAP: 'heatmap',
-  OD_ARC: 'od-arc',
 } as const;
 
 export type LayerId = (typeof LAYER_IDS)[keyof typeof LAYER_IDS];
@@ -19,7 +18,6 @@ export const LAYER_CONFIG: readonly LayerConfig[] = [
   // Trips 同時控制 zoom 放大後的位置點（usePointsLayer），兩者依 zoom 自動切換，不分開勾選
   { id: LAYER_IDS.TRIPS, defaultVisible: true },
   { id: LAYER_IDS.HEATMAP, defaultVisible: false },
-  { id: LAYER_IDS.OD_ARC, defaultVisible: false },
 ];
 
 export const INITIAL_VISIBLE_LAYERS: Record<LayerId, boolean> = LAYER_CONFIG.reduce(

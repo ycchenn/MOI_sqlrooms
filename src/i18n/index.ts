@@ -38,7 +38,6 @@ const zh = {
   'layers.title': '圖層',
   'layer.trips': '移動軌跡',
   'layer.heatmap': '路徑密度',
-  'layer.od-arc': '起迄弧線',
 
   'agent.title': '代理人 #{id}',
   'agent.loading': '載入代理人資料中...',
@@ -93,7 +92,6 @@ const en: Record<MessageKey, string> = {
   'layers.title': 'Layers',
   'layer.trips': 'Trips',
   'layer.heatmap': 'Heatmap',
-  'layer.od-arc': 'OD Arcs',
 
   'agent.title': 'Agent #{id}',
   'agent.loading': 'Loading agent data...',
