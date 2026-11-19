@@ -36,6 +36,9 @@ interface MapState {
   // 存「隱藏的」而不是「選取的」，預設空陣列 = 全部顯示，不用事先知道資料有哪些群組。
   demoDimension: DemoDimension;
   hiddenDemoGroups: string[];
+  // 代理人模糊搜尋（AgentSearch）：搜尋字、以及要不要讓地圖只顯示搜尋到的人
+  searchQuery: string;
+  searchMapOnly: boolean;
 
   setTime: (t: number) => void;
   setTimeRange: (range: [number, number]) => void;
@@ -51,6 +54,8 @@ interface MapState {
   setDemoDimension: (dim: DemoDimension) => void;
   toggleDemoGroup: (key: string) => void;
   showAllDemoGroups: () => void;
+  setSearchQuery: (q: string) => void;
+  setSearchMapOnly: (on: boolean) => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
@@ -66,6 +71,8 @@ export const useMapStore = create<MapState>((set) => ({
   language: loadLanguage(),
   demoDimension: 'education',
   hiddenDemoGroups: [],
+  searchQuery: '',
+  searchMapOnly: false,
 
   setTime: (t) => set({ time: t }),
   setTimeRange: (range) => set({ timeRange: range }),
@@ -102,4 +109,6 @@ export const useMapStore = create<MapState>((set) => ({
       : [...state.hiddenDemoGroups, key],
   })),
   showAllDemoGroups: () => set({ hiddenDemoGroups: [] }),
+  setSearchQuery: (q) => set({ searchQuery: q }),
+  setSearchMapOnly: (on) => set({ searchMapOnly: on }),
 }));

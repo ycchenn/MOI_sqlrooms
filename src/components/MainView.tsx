@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import type * as arrow from 'apache-arrow';
 import { SpinnerPane } from '@sqlrooms/ui';
 import { useSql } from '@sqlrooms/duckdb';
@@ -9,6 +9,7 @@ import { useMapStore } from '../zustand/useMapStore';
 import { MapView } from './MapView';
 import { ModeSelector } from './ModeSelector';
 import { DemographicSelector } from './DemographicSelector';
+import { AgentSearch } from './AgentSearch';
 import { LayerPanel } from './LayerPanel';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Timebar } from './timebar/Timebar';
@@ -16,6 +17,7 @@ import { AgentOverviewPanel } from './AgentOverviewPanel';
 import { AgentDetailPanel } from './AgentDetailPanel';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useDemographicIndex, useVisibleAgentIds } from '@/hooks/useDemographics';
+import { useAgentSearch } from '@/hooks/useAgentSearch';
 
 export const MainView: React.FC = () => {
   const selectedAgentId = useMapStore(useShallow((s) => s.selectedAgentId));
@@ -40,7 +42,16 @@ export const MainView: React.FC = () => {
   // 地圖則改用只含「留下來的代理人」的表——軌跡是 GPU 直接吃整張 Arrow 表畫的，
   // 最乾淨的做法就是請 DuckDB 用 WHERE id IN (...) 再查一次，trips/heatmap/points 不用各自改。
   const demoIndex = useDemographicIndex(profiles);
-  const visibleIds = useVisibleAgentIds(arrowTable, demoIndex);
+  const demoIds = useVisibleAgentIds(arrowTable, demoIndex);
+  // 搜尋：勾了「只在地圖顯示搜尋結果」才當成篩選條件，跟人口篩選取交集
+  const search = useAgentSearch(profiles, arrowTable);
+  const searchMapOnly = useMapStore((s) => s.searchMapOnly);
+  const searchIds = searchMapOnly ? search.matchedIds : null;
+  const visibleIds = useMemo(() => {
+    if (!demoIds) return searchIds;
+    if (!searchIds) return demoIds;
+    return new Set([...demoIds].filter((id) => searchIds.has(id)));
+  }, [demoIds, searchIds]);
   const visibleKey = visibleIds ? [...visibleIds].sort((a, b) => a - b).join(',') : null;
   const filteredQuery =
     visibleKey === null
@@ -61,6 +72,8 @@ export const MainView: React.FC = () => {
           <div className="w-[340px] shrink-0 h-full bg-dash-panel border-r border-dash-border overflow-y-auto scrollbar-subtle p-4 flex flex-col gap-3 z-10">
             {/* 中英切換：固定在側欄左上，總覽/agent 行程兩種畫面都看得到 */}
             <LanguageSwitcher />
+            {/* 搜尋框跟總覽一起出現；選了某個人時側欄只留他的行程（搜尋字會保留，回到總覽還在） */}
+            {selectedAgentId === null && <AgentSearch search={search} />}
             {/* 點了地圖上某個 agent 就切換成他的 profile+schedule（微觀），
                 沒選取時顯示全體統計（宏觀）——兩者共用同一個 selectedAgentId 開關。 */}
             {selectedAgentId !== null ? (
@@ -72,7 +85,7 @@ export const MainView: React.FC = () => {
             {selectedAgentId === null && (
               <>
                 <ModeSelector arrowTable={arrowTable} visibleIds={visibleIds} />
-                <DemographicSelector arrowTable={arrowTable} index={demoIndex} />
+                <DemographicSelector arrowTable={arrowTable} index={demoIndex} searchIds={searchIds} />
                 <LayerPanel />
               </>
             )}

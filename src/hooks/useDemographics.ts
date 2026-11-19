@@ -32,7 +32,12 @@ export const useVisibleAgentIds = (
 
 // 人口甜甜圈的每塊大小：目前播放時間「正在移動」、且運具有被選取的代理人，依群組計數。
 // 跟運具甜甜圈互相連動（各自只受「另一個」甜甜圈的篩選影響），兩張圖與地圖是同一群人。
-export const useDemographicShares = (arrowTable: arrow.Table, index: DemographicIndex | null) => {
+// searchIds：搜尋篩選後留下的人（null = 沒篩選）
+export const useDemographicShares = (
+  arrowTable: arrow.Table,
+  index: DemographicIndex | null,
+  searchIds: Set<number> | null = null,
+) => {
   const { time, selectedModes } = useMapStore(
     useShallow((s) => ({ time: s.time, selectedModes: s.selectedModes })),
   );
@@ -42,7 +47,7 @@ export const useDemographicShares = (arrowTable: arrow.Table, index: Demographic
     let total = 0;
     if (!index) return { counts, total };
     for (const agent of getAgentCache(arrowTable)) {
-      if (agent.id == null) continue;
+      if (agent.id == null || (searchIds && !searchIds.has(agent.id))) continue;
       const state = getAgentStateAt(agent, time);
       if (!state || !selectedModes.includes(state.mode)) continue;
       const group = index.groupOf(agent.id);
@@ -50,5 +55,5 @@ export const useDemographicShares = (arrowTable: arrow.Table, index: Demographic
       total += 1;
     }
     return { counts, total };
-  }, [arrowTable, index, time, selectedModes]);
+  }, [arrowTable, index, time, selectedModes, searchIds]);
 };

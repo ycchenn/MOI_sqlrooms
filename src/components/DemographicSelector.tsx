@@ -9,7 +9,15 @@ import { DonutChart } from './DonutChart';
 
 // 人口背景甜甜圈：上方分頁切換分類方式（學歷/收入/年齡/職業），每塊 = 目前移動中、
 // 且運具有被選取的人數。點一塊切換該群在地圖上顯示與否（可複選）。
-export const DemographicSelector = ({ arrowTable, index }: { arrowTable: arrow.Table; index: DemographicIndex | null }) => {
+export const DemographicSelector = ({
+  arrowTable,
+  index,
+  searchIds = null,
+}: {
+  arrowTable: arrow.Table;
+  index: DemographicIndex | null;
+  searchIds?: Set<number> | null;
+}) => {
   const { dim, hidden, setDim, toggleGroup, showAll } = useMapStore(
     useShallow((s) => ({
       dim: s.demoDimension,
@@ -19,7 +27,7 @@ export const DemographicSelector = ({ arrowTable, index }: { arrowTable: arrow.T
       showAll: s.showAllDemoGroups,
     })),
   );
-  const { counts } = useDemographicShares(arrowTable, index);
+  const { counts } = useDemographicShares(arrowTable, index, searchIds);
   const t = useT();
 
   const tabs = (
