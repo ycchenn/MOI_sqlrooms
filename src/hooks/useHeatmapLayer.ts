@@ -31,7 +31,7 @@ export const useHeatmapLayer = (arrowTable: arrow.Table | undefined, debouncedTi
   const selectedModesKey = selectedModes.join(',');
 
   return useMemo(() => {
-    if (!arrowTable || !visible) return [];
+    if (!arrowTable || arrowTable.numRows === 0 || !visible) return [];
 
     // 為每個被勾選的 mode 各建一個 ArrowPathLayer 子層,讓每個運具能擁有自己
     // 的顏色與 GPU filter。同一份 arrowTable 被多個子層共用(zero-copy)。

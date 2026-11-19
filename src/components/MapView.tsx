@@ -196,7 +196,7 @@ export const MapView: FC<{ arrowTable: arrow.Table; profiles: ProfilesData | nul
   layers.push(...heatmapLayers);
   layers.push(...pointsLayers);
 
-  if (arrowTable && tripsVisible && currentZoom <= ZOOM_THRESHOLD) {
+  if (arrowTable && arrowTable.numRows > 0 && tripsVisible && currentZoom <= ZOOM_THRESHOLD) {
     layers.push(
       new ArrowTripsLayer({
         id: 'trips-layer',

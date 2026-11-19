@@ -24,9 +24,17 @@ const zh = {
   'location.Others': '其他',
 
   'modes.title': '運具',
-  'modes.showAll': '全部顯示',
-  'modes.moving': '移動中',
-  'modes.ariaSlice': '{label} {count} 人，{pct}',
+  'common.showAll': '全部顯示',
+  'donut.moving': '移動中',
+  'donut.ariaSlice': '{label} {count} 人，{pct}',
+
+  'demo.title': '人口背景',
+  'demo.dim.education': '學歷',
+  'demo.dim.income': '收入',
+  'demo.dim.age': '年齡',
+  'demo.dim.occupation': '職業',
+  'demo.ageRange': '{range} 歲',
+  'demo.other': '其他',
 
   'mode.1': '走路',
   'mode.2': '開車',
@@ -78,9 +86,17 @@ const en: Record<MessageKey, string> = {
   'location.Others': 'Others',
 
   'modes.title': 'Mobility Modes',
-  'modes.showAll': 'Show all',
-  'modes.moving': 'Moving',
-  'modes.ariaSlice': '{label}: {count} agents, {pct}',
+  'common.showAll': 'Show all',
+  'donut.moving': 'Moving',
+  'donut.ariaSlice': '{label}: {count} agents, {pct}',
+
+  'demo.title': 'Demographics',
+  'demo.dim.education': 'Education',
+  'demo.dim.income': 'Income',
+  'demo.dim.age': 'Age',
+  'demo.dim.occupation': 'Occupation',
+  'demo.ageRange': '{range}',
+  'demo.other': 'Other',
 
   'mode.1': 'Walk',
   'mode.2': 'Car',

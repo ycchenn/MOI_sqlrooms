@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+import type * as arrow from 'apache-arrow';
 import { SpinnerPane } from '@sqlrooms/ui';
 import { useSql } from '@sqlrooms/duckdb';
 import { useShallow } from '@sqlrooms/room-shell';
@@ -6,12 +8,14 @@ import { ARCHIVE_DATA_URL } from '../constants/data';
 import { useMapStore } from '../zustand/useMapStore';
 import { MapView } from './MapView';
 import { ModeSelector } from './ModeSelector';
+import { DemographicSelector } from './DemographicSelector';
 import { LayerPanel } from './LayerPanel';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Timebar } from './timebar/Timebar';
 import { AgentOverviewPanel } from './AgentOverviewPanel';
 import { AgentDetailPanel } from './AgentDetailPanel';
 import { useProfiles } from '@/hooks/useProfiles';
+import { useDemographicIndex, useVisibleAgentIds } from '@/hooks/useDemographics';
 
 export const MainView: React.FC = () => {
   const selectedAgentId = useMapStore(useShallow((s) => s.selectedAgentId));
@@ -32,6 +36,22 @@ export const MainView: React.FC = () => {
 
   const arrowTable = data?.arrowTable;
 
+  // 人口背景篩選：甜甜圈們用完整的 arrowTable 統計（被隱藏的群組還留在圓環上、可以點回來），
+  // 地圖則改用只含「留下來的代理人」的表——軌跡是 GPU 直接吃整張 Arrow 表畫的，
+  // 最乾淨的做法就是請 DuckDB 用 WHERE id IN (...) 再查一次，trips/heatmap/points 不用各自改。
+  const demoIndex = useDemographicIndex(profiles);
+  const visibleIds = useVisibleAgentIds(arrowTable, demoIndex);
+  const visibleKey = visibleIds ? [...visibleIds].sort((a, b) => a - b).join(',') : null;
+  const filteredQuery =
+    visibleKey === null
+      ? 'SELECT 1 WHERE FALSE' // 沒篩選：不用多查，地圖直接用 arrowTable
+      : `${query.trim()} WHERE ${visibleKey ? `TRY_CAST(id AS BIGINT) IN (${visibleKey})` : 'FALSE'}`;
+  const { data: filteredData } = useSql({ query: filteredQuery });
+  // 換篩選條件時新結果還沒回來，先沿用上一次篩好的表，地圖不會閃一下全部人
+  const lastFilteredTable = useRef<arrow.Table | undefined>(undefined);
+  if (visibleIds && filteredData?.arrowTable) lastFilteredTable.current = filteredData.arrowTable;
+  const mapTable = visibleIds ? (lastFilteredTable.current ?? arrowTable) : arrowTable;
+
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-dash-app">
       {arrowTable && !isLoading ? (
@@ -51,7 +71,8 @@ export const MainView: React.FC = () => {
             {/* 選了某個 agent 時側欄只留他的 Schedule，總覽用的甜甜圈/圖層控制先收起來 */}
             {selectedAgentId === null && (
               <>
-                <ModeSelector arrowTable={arrowTable} />
+                <ModeSelector arrowTable={arrowTable} visibleIds={visibleIds} />
+                <DemographicSelector arrowTable={arrowTable} index={demoIndex} />
                 <LayerPanel />
               </>
             )}
@@ -60,7 +81,7 @@ export const MainView: React.FC = () => {
           {/* 右側：地圖 + 時間軸，佔側欄以外的剩餘寬度 */}
           <div className="relative flex-1 h-full">
             <div className="absolute inset-0 z-0">
-              <MapView arrowTable={arrowTable} profiles={profiles} />
+              <MapView arrowTable={mapTable ?? arrowTable} profiles={profiles} />
             </div>
 
             {/* 正下方：時間軸（相對這塊地圖區置中，不會跑到側欄底下） */}

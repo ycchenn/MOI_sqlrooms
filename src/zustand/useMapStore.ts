@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { INITIAL_SELETED_MOBILITY_MODES_BITS } from '../constants/map';
 import { INITIAL_VISIBLE_LAYERS, type LayerId } from '../constants/layers';
 import type { Lang } from '../i18n';
+import type { DemoDimension } from '../lib/demographics';
 
 // 介面語言記在瀏覽器裡，下次打開沿用；無痕模式/封鎖儲存時讀寫會丟例外，一律退回中文。
 const LANG_STORAGE_KEY = 'moi-sqlrooms.lang';
@@ -31,6 +32,10 @@ interface MapState {
   // 地圖上點擊選中的 agent（Dashboard 側欄用來切換宏觀總覽／微觀個人視圖）；null = 沒有選取。
   selectedAgentId: number | null;
   language: Lang;
+  // 人口背景篩選（DemographicSelector）：目前用哪個欄位分組、哪些群組被隱藏。
+  // 存「隱藏的」而不是「選取的」，預設空陣列 = 全部顯示，不用事先知道資料有哪些群組。
+  demoDimension: DemoDimension;
+  hiddenDemoGroups: string[];
 
   setTime: (t: number) => void;
   setTimeRange: (range: [number, number]) => void;
@@ -43,6 +48,9 @@ interface MapState {
   toggleLayer: (id: LayerId) => void;
   setSelectedAgentId: (id: number | null) => void;
   setLanguage: (lang: Lang) => void;
+  setDemoDimension: (dim: DemoDimension) => void;
+  toggleDemoGroup: (key: string) => void;
+  showAllDemoGroups: () => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
@@ -56,6 +64,8 @@ export const useMapStore = create<MapState>((set) => ({
   visibleLayers: INITIAL_VISIBLE_LAYERS,
   selectedAgentId: null,
   language: loadLanguage(),
+  demoDimension: 'education',
+  hiddenDemoGroups: [],
 
   setTime: (t) => set({ time: t }),
   setTimeRange: (range) => set({ timeRange: range }),
@@ -84,4 +94,12 @@ export const useMapStore = create<MapState>((set) => ({
     }
     set({ language: lang });
   },
+  // 換分類方式時清掉篩選：各分類的群組 key 不一樣，留著舊的隱藏清單沒有意義
+  setDemoDimension: (dim) => set({ demoDimension: dim, hiddenDemoGroups: [] }),
+  toggleDemoGroup: (key) => set((state) => ({
+    hiddenDemoGroups: state.hiddenDemoGroups.includes(key)
+      ? state.hiddenDemoGroups.filter((k) => k !== key)
+      : [...state.hiddenDemoGroups, key],
+  })),
+  showAllDemoGroups: () => set({ hiddenDemoGroups: [] }),
 }));
